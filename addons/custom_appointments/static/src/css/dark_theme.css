@@ -411,6 +411,7 @@ div[class*="hero-bg"] {
 /* Primary / Accent — rose gold CTA */
 .btn-primary,
 .btn-accent,
+.continue-services-btn,
 .btn-book,
 .select-btn,
 .book-btn,
@@ -1960,6 +1961,22 @@ button.btn-directions:active,
 a.btn-directions:active {
     transform: translateY(-1px) !important;
     box-shadow: 0 4px 14px rgba(201, 149, 106, 0.4) !important;
+}
+
+/* Override wildcard .location-card * color for Get Directions button */
+.location-card button.btn-directions,
+.location-card a.btn-directions,
+.card-body button.btn-directions,
+.card-body a.btn-directions {
+    color: #111827 !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+}
+
+.location-card button.btn-directions i,
+.location-card a.btn-directions i,
+.card-body button.btn-directions i,
+.card-body a.btn-directions i {
+    color: var(--accent) !important;
 }
 
 /* Hours + Contact sections — proper dark card treatment */
