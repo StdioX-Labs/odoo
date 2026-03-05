@@ -26,126 +26,79 @@ class AppointmentController(http.Controller):
 
     @http.route('/appointments', type='http', auth='public', website=True)
     def appointment_booking(self, **kwargs):
-        """Main appointment booking page - Location and staff selection"""
-        branch_id = kwargs.get('branch_id')
-        
-        branches = request.env['custom.branch'].sudo().search([
-            ('active', '=', True)
-        ], order='name')
-        
-        selected_branch = None
-        if branch_id:
-            selected_branch = request.env['custom.branch'].sudo().browse(int(branch_id))
-        elif branches:
-            main_branch = request.env['custom.branch'].sudo().search([
-                ('is_main_branch', '=', True),
-                ('active', '=', True)
-            ], limit=1)
-            selected_branch = main_branch if main_branch else branches[0]
-        
-        staff_domain = [
-            ('is_bookable', '=', True),
-            ('active', '=', True)
-        ]
-        if selected_branch:
-            staff_domain.append(('branch_id', '=', selected_branch.id))
-        
-        staff_members = request.env['custom.staff.member'].sudo().search(staff_domain, order='name')
-        
-        return request.render('custom_appointments.appointment_booking_page', {
-            'staff_members': staff_members,
-            'branches': branches,
-            'selected_branch': selected_branch,
-        })
-
-    @http.route('/appointments/services', type='http', auth='public', website=True)
-    def service_selection(self, **kwargs):
-        """Professional service selection page"""
-        staff_id = kwargs.get('staff_id')
-        branch_id = kwargs.get('branch_id')
-
+        """Main booking page - direct to service selection (branch and staff auto-assigned)"""
         services = request.env['company.service'].sudo().get_available_services()
         service_categories = request.env['service.category'].sudo().search([
             ('active', '=', True)
         ], order='sequence, name')
-        
-        selected_branch = None
-        selected_staff = None
-
-        if staff_id and staff_id != 'any':
-            selected_staff = request.env['custom.staff.member'].sudo().browse(int(staff_id))
-            if selected_staff.exists() and selected_staff.branch_id:
-                selected_branch = selected_staff.branch_id
-
-        if branch_id:
-            selected_branch = request.env['custom.branch'].sudo().browse(int(branch_id))
-
-        staff_domain = [
-            ('is_bookable', '=', True),
-            ('active', '=', True)
-        ]
-        if branch_id:
-            staff_domain.append(('branch_id', '=', int(branch_id)))
-        elif selected_branch:
-            staff_domain.append(('branch_id', '=', selected_branch.id))
-        
-        staff_members = request.env['custom.staff.member'].sudo().search(staff_domain, order='name')
-
         return request.render('custom_appointments.service_selection_page', {
             'services': services,
             'service_categories': service_categories,
-            'staff_members': staff_members,
-            'selected_staff_id': staff_id,
-            'selected_branch': selected_branch,
-            'selected_staff': selected_staff,
         })
+
+    @http.route('/appointments/services', type='http', auth='public', website=True)
+    def service_selection(self, **kwargs):
+        """Redirect to main appointments page for backward compatibility"""
+        params = request.httprequest.query_string.decode('utf-8')
+        url = '/appointments' + (f'?{params}' if params else '')
+        return request.redirect(url)
 
     @http.route('/appointments/book', type='http', auth='public', website=True, methods=['GET', 'POST'])
     def book_appointment(self, **kwargs):
-        """Appointment booking form"""
+        """Appointment booking form (branch and staff auto-assigned)"""
         if request.httprequest.method == 'GET':
             service_id = kwargs.get('service_id')
-            staff_id = kwargs.get('staff_id')
-            
-            if not service_id or not staff_id:
+            if not service_id:
                 return request.redirect('/appointments')
-            
+
             service = request.env['company.service'].sudo().browse(int(service_id))
-            staff = request.env['custom.staff.member'].sudo().browse(int(staff_id))
-            
-            if not service.exists() or not staff.exists():
+            if not service.exists():
                 return request.redirect('/appointments')
-            
-            available_slots = self._get_available_slots(service, staff)
-            
-            import json
+
+            branch = self._get_default_branch()
+            available_slots = self._get_available_slots_all_staff(service, branch)
             available_slots_json = json.dumps(available_slots)
-            
+
             return request.render('custom_appointments.booking_form_page', {
                 'service': service,
-                'staff': staff,
+                'staff': None,
+                'branch': branch,
                 'available_slots': available_slots,
                 'available_slots_json': available_slots_json,
             })
-        
+
         elif request.httprequest.method == 'POST':
             return self._process_booking(kwargs)
 
     @http.route('/appointments/slots', type='json', auth='public', website=True)
-    def get_available_slots(self, service_id, staff_id, date=None):
-        """AJAX endpoint to get available time slots for a specific date"""
+    def get_available_slots(self, service_id, staff_id=None, date=None):
+        """AJAX endpoint to get available time slots for a specific date.
+        If staff_id is omitted, slots are aggregated across all eligible staff at default branch."""
         service = request.env['company.service'].sudo().browse(service_id)
-        staff = request.env['custom.staff.member'].sudo().browse(staff_id)
-        
-        if not service.exists() or not staff.exists():
-            return {'error': 'Invalid service or staff'}
-        
+        if not service.exists():
+            return {'error': 'Invalid service'}
+
         if date:
             target_date = datetime.strptime(date, '%Y-%m-%d').date()
         else:
             target_date = datetime.now().date()
-        
-        slots = self._get_slots_for_date(service, staff, target_date)
+
+        if staff_id:
+            staff = request.env['custom.staff.member'].sudo().browse(int(staff_id))
+            if not staff.exists():
+                return {'error': 'Invalid staff'}
+            slots = self._get_slots_for_date(service, staff, target_date)
+        else:
+            branch = self._get_default_branch()
+            eligible = self._get_eligible_staff(service, branch)
+            seen_times = set()
+            slots = []
+            for staff in eligible:
+                for slot in self._get_slots_for_date(service, staff, target_date):
+                    if slot['time'] not in seen_times:
+                        seen_times.add(slot['time'])
+                        slots.append(slot)
+            slots.sort(key=lambda x: x['time'])
         return {'slots': slots}
 
     @http.route('/appointments/validate-promo', type='json', auth='public', website=True, methods=['POST'], csrf=False)
@@ -283,53 +236,111 @@ class AppointmentController(http.Controller):
         
         return len(existing_appointments) > 0
 
+    def _get_default_branch(self):
+        """Return the main branch or first active branch for auto-assignment."""
+        main_branch = request.env['custom.branch'].sudo().search([
+            ('is_main_branch', '=', True),
+            ('active', '=', True)
+        ], limit=1)
+        if main_branch:
+            return main_branch
+        return request.env['custom.branch'].sudo().search([
+            ('active', '=', True)
+        ], order='name', limit=1)
+
+    def _get_eligible_staff(self, service, branch):
+        """Return staff eligible to perform the service at the branch."""
+        if not branch:
+            return request.env['custom.staff.member'].sudo()
+        domain = [
+            ('is_bookable', '=', True),
+            ('active', '=', True),
+            ('branch_id', '=', branch.id),
+        ]
+        staff = request.env['custom.staff.member'].sudo().search(domain, order='name')
+        if service.requires_specific_staff and service.allowed_staff_ids:
+            staff = staff.filtered(lambda s: s in service.allowed_staff_ids)
+        return staff
+
+    def _get_available_slots_all_staff(self, service, branch, days_ahead=30):
+        """Aggregate available time slots across all eligible staff for the branch."""
+        slots_by_date = {}
+        today = datetime.now().date()
+        eligible = self._get_eligible_staff(service, branch)
+        if not eligible:
+            return slots_by_date
+        for i in range(days_ahead):
+            date = today + timedelta(days=i)
+            seen_times = set()
+            date_slots = []
+            for staff in eligible:
+                slots = self._get_slots_for_date(service, staff, date)
+                for slot in slots:
+                    t = slot['time']
+                    if t not in seen_times:
+                        seen_times.add(t)
+                        date_slots.append(slot)
+            date_slots.sort(key=lambda x: x['time'])
+            if date_slots:
+                slots_by_date[date.strftime('%Y-%m-%d')] = date_slots
+        return slots_by_date
+
+    def _auto_assign_staff(self, service, branch, start_datetime):
+        """Pick an available staff for the slot using load-balancing (fewest upcoming appointments)."""
+        eligible = self._get_eligible_staff(service, branch)
+        available = eligible.filtered(
+            lambda s: not self._has_conflict(s, start_datetime, service.duration, service)
+        )
+        if not available:
+            raise ValueError("No staff available for this time slot")
+        Appointment = request.env['custom.appointment'].sudo()
+        now_utc = fields.Datetime.now()
+        def count_upcoming(staff):
+            return Appointment.search_count([
+                ('staff_member_id', '=', staff.id),
+                ('state', 'in', ['draft', 'confirmed']),
+                ('start', '>=', now_utc),
+            ])
+        best = min(available, key=count_upcoming)
+        return best
+
     def _process_booking(self, data):
-        """Process the booking form submission"""
+        """Process the booking form submission (staff auto-assigned)."""
         try:
             import pytz
-            
+
             service_id = int(data.get('service_id'))
-            staff_id = int(data.get('staff_id'))
             appointment_datetime = data.get('appointment_datetime')
             customer_name = data.get('customer_name')
             customer_email = data.get('customer_email')
             customer_phone = data.get('customer_phone', '')
             notes = data.get('notes', '')
             promo_code = data.get('promo_code', '').strip().upper()
-            
-            # Health Disclosure fields
-            has_allergies = data.get('has_allergies') == '1'
-            allergies_details = data.get('allergies_details', '') if has_allergies else ''
-            has_eye_conditions = data.get('has_eye_conditions') == '1'
-            is_pregnant = data.get('is_pregnant') == '1'
-            no_health_conditions = data.get('no_health_conditions') == '1'
-            
+
             # Desired Outcome fields
             desired_lash_look = data.get('desired_lash_look', '')
-            has_previous_extensions = data.get('has_previous_extensions', False)
-            if has_previous_extensions not in ['yes', 'no']:
-                has_previous_extensions = False
-            
+
             service = request.env['company.service'].sudo().browse(service_id)
-            staff = request.env['custom.staff.member'].sudo().browse(staff_id)
-            
-            if not service.exists() or not staff.exists():
-                raise ValueError("Invalid service or staff")
-            
+            if not service.exists():
+                raise ValueError("Invalid service")
+
+            branch = self._get_default_branch()
+            if not branch:
+                raise ValueError("No branch available for booking")
+
             tz_name = request.env['ir.config_parameter'].sudo().get_param('appointment.timezone', 'Africa/Nairobi')
             try:
                 server_tz = pytz.timezone(tz_name)
-            except:
+            except Exception:
                 server_tz = pytz.timezone('Africa/Nairobi')
-            
+
             naive_dt = datetime.fromisoformat(appointment_datetime.replace('Z', '').replace('+00:00', ''))
             local_dt = server_tz.localize(naive_dt)
             start_dt = local_dt.astimezone(pytz.utc).replace(tzinfo=None)
             end_dt = start_dt + timedelta(hours=service.duration)
-            
-            if self._has_conflict(staff, start_dt, service.duration, service):
-                raise ValueError("Time slot is no longer available")
-            
+
+            staff = self._auto_assign_staff(service, branch, start_dt)
+
             # Handle promo code
             promo = None
             discount_amount = 0
@@ -339,12 +350,12 @@ class AppointmentController(http.Controller):
                 if promo:
                     validation = promo.validate_promo(
                         service_id=service_id,
-                        branch_id=staff.branch_id.id if staff.branch_id else None,
+                        branch_id=branch.id,
                         amount=service.price
                     )
                     if validation['valid']:
                         discount_amount = validation['discount_amount']
-            
+
             appointment_vals = {
                 'name': f"{service.name} - {customer_name}",
                 'customer_name': customer_name,
@@ -352,7 +363,7 @@ class AppointmentController(http.Controller):
                 'customer_phone': customer_phone,
                 'service_id': service.id,
                 'staff_member_id': staff.id,
-                'branch_id': staff.branch_id.id,
+                'branch_id': branch.id,
                 'start': start_dt,
                 'stop': end_dt,
                 'description': notes,
@@ -361,15 +372,8 @@ class AppointmentController(http.Controller):
                 'promo_code_entered': promo_code if promo_code else False,
                 'promo_id': promo.id if promo else False,
                 'discount_amount': discount_amount,
-                # Health Disclosure fields
-                'has_allergies': has_allergies,
-                'allergies_details': allergies_details,
-                'has_eye_conditions': has_eye_conditions,
-                'is_pregnant': is_pregnant,
-                'no_health_conditions': no_health_conditions,
                 # Desired Outcome fields
                 'desired_lash_look': desired_lash_look,
-                'has_previous_extensions': has_previous_extensions if has_previous_extensions else False,
             }
             
             appointment_vals['state'] = 'draft'

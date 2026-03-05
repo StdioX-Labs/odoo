@@ -191,7 +191,7 @@
                                             <t t-if="member.specialization">
                                                 <p class="revive-team-role"><t t-esc="member.specialization"/></p>
                                             </t>
-                                            <a t-attf-href="/appointments?staff_id=#{member.id}" class="revive-team-book">
+                                            <a href="/appointments" class="revive-team-book">
                                                 Book with <t t-esc="member.name.split()[0]"/>
                                             </a>
                                         </div>

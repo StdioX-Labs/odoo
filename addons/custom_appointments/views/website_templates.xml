@@ -444,17 +444,11 @@
 
                     <div class="container position-relative" style="z-index: 2;">
                         <div class="row align-items-center">
-                            <div class="col-md-8">
+                            <div class="col-12">
                                 <h1 class="display-5 font-weight-bold text-dark mb-2">
                                     <t t-esc="request.env.company.name or 'Professional Services'"/>
-                                    <t t-if="selected_branch"> - <t t-esc="selected_branch.name"/></t>
                                 </h1>
                                 <p class="text-light-muted mb-0">Select your preferred services</p>
-                            </div>
-                            <div class="col-md-4 text-right">
-                                <a href="/appointments" class="btn btn-accent" style="border-radius: 20px; padding: 10px 25px;">
-                                    <i class="fa fa-arrow-left mr-2"></i> Change Branch
-                                </a>
                             </div>
                         </div>
                     </div>
@@ -493,88 +487,6 @@
                 </style>
 
                 <div class="container">
-                    <!-- Selection Summary Panel (New) -->
-                    <div class="selection-summary mb-4">
-                        <div class="card shadow-sm border-0" style="border-radius: 15px; overflow: hidden;">
-                            <div class="card-header bg-light p-3" style="background: rgba(255,255,255,0.05); border: none;">
-                                <h5 class="font-weight-bold mb-0">
-                                    <i class="fa fa-check-circle mr-2" style="color: #ffffff;"></i>
-                                    Your Selection Summary
-                                </h5>
-                            </div>
-                            <div class="card-body p-3">
-                                <div class="row">
-                                    <!-- Branch Information -->
-                                    <div class="col-md-6 mb-3 mb-md-0">
-                                        <div class="selection-item p-3" style="background: rgba(255,255,255,0.05); border-radius: 10px;">
-                                            <div class="d-flex align-items-center">
-                                                <div class="bk-icon-circle">
-                                                    <i class="fa fa-building"></i>
-                                                </div>
-                                                <div>
-                                                    <div class="small text-muted">Selected Branch</div>
-                                                    <div class="font-weight-bold" id="selected-branch-name">
-                                                        <t t-if="selected_branch">
-                                                            <t t-esc="selected_branch.name"/>
-                                                        </t>
-                                                        <t t-else="">
-                                                            Main Branch
-                                                        </t>
-                                                    </div>
-                                                    <div class="small text-muted" id="selected-branch-address">
-                                                        <t t-if="selected_branch and selected_branch.street">
-                                                            <t t-esc="selected_branch.street"/>
-                                                        </t>
-                                                        <t t-else="">
-                                                            123 Main Street
-                                                        </t>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Staff Member Information -->
-                                    <div class="col-md-6">
-                                        <div class="selection-item p-3" style="background: rgba(255,255,255,0.05); border-radius: 10px;">
-                                            <div class="d-flex align-items-center">
-                                                <div id="staff-avatar" class="bk-icon-circle" style="overflow: hidden;">
-                                                    <t t-if="selected_staff and selected_staff.image">
-                                                        <img t-att-src="'/web/image/custom.staff.member/%s/image/90x90' % selected_staff.id"
-                                                             style="width: 100%; height: 100%; object-fit: cover;"
-                                                             alt="Staff Photo"/>
-                                                    </t>
-                                                    <t t-else="">
-                                                        <i class="fa fa-user" style="color: #ffffff; font-size: 18px;"></i>
-                                                    </t>
-                                                </div>
-                                                <div>
-                                                    <div class="small text-muted">Selected Specialist</div>
-                                                    <div class="font-weight-bold" id="selected-staff-name">
-                                                        <t t-if="selected_staff">
-                                                            <t t-esc="selected_staff.name"/>
-                                                        </t>
-                                                        <t t-else="">
-                                                            Any Available Staff
-                                                        </t>
-                                                    </div>
-                                                    <div class="small text-muted" id="selected-staff-specialization">
-                                                        <t t-if="selected_staff and selected_staff.specialization">
-                                                            <t t-esc="selected_staff.specialization"/>
-                                                        </t>
-                                                        <t t-else="">
-                                                            Professional Specialist
-                                                        </t>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
                     <!-- Service Selection -->
                     <div class="service-selection">
                         <div class="row">
@@ -757,207 +669,11 @@
                     </div>
                 </div>
 
-                <!-- Location Details Section -->
-                <div class="container mb-5">
-                    <div class="row">
-                        <div class="col-lg-12 mb-4">
-                            <div class="location-card shadow-sm border-0" style="border-radius: 20px; overflow: hidden; background: linear-gradient(to right, #0d1117, #111827); position: relative;">
-                                <!-- Decorative Elements -->
-                                <div class="decorative-circle" style="position: absolute; top: -30px; right: -30px; width: 120px; height: 120px; border-radius: 50%; background: rgba(255,255,255,0.1); z-index: 1;"></div>
-                                <div class="decorative-circle" style="position: absolute; bottom: -20px; left: -40px; width: 100px; height: 100px; border-radius: 50%; background: rgba(255,255,255,0.08); z-index: 1;"></div>
-
-                                <div class="card-body p-4" style="position: relative; z-index: 2;">
-
-                                    <div class="row">
-                                        <!-- Hours Section -->
-                                        <div class="col-md-6 mb-4">
-                                            <div class="hours-section">
-                                                <div class="d-flex align-items-center mb-3">
-                                                    <h5 class="font-weight-bold ml-3 mb-0">Hours of Operation</h5>
-                                                </div>
-
-                                                <div class="hours-list mt-3">
-                                                    <t t-if="selected_branch">
-                                                        <div class="hour-item d-flex justify-content-between align-items-center p-2 mb-2" style="border-bottom: 1px dashed rgba(255,255,255,0.1);">
-                                                            <div class="day-label">
-                                                                <span class="font-weight-bold">Monday</span>
-                                                            </div>
-                                                            <div class="hours-value" t-att-style="'color: ' + ('#ffffff' if selected_branch.monday_open > 0 else '#888') + '; font-weight: 600;'">
-                                                                <t t-if="selected_branch.monday_open > 0">
-                                                                    <t t-esc="'{:02d}:{:02d}'.format(int(selected_branch.monday_open), int((selected_branch.monday_open % 1) * 60))"/> - <t t-esc="'{:02d}:{:02d}'.format(int(selected_branch.monday_close), int((selected_branch.monday_close % 1) * 60))"/>
-                                                                </t>
-                                                                <t t-else="">Closed</t>
-                                                            </div>
-                                                        </div>
-                                                        <div class="hour-item d-flex justify-content-between align-items-center p-2 mb-2" style="border-bottom: 1px dashed rgba(255,255,255,0.1);">
-                                                            <div class="day-label">
-                                                                <span class="font-weight-bold">Tuesday</span>
-                                                            </div>
-                                                            <div class="hours-value" t-att-style="'color: ' + ('#ffffff' if selected_branch.tuesday_open > 0 else '#888') + '; font-weight: 600;'">
-                                                                <t t-if="selected_branch.tuesday_open > 0">
-                                                                    <t t-esc="'{:02d}:{:02d}'.format(int(selected_branch.tuesday_open), int((selected_branch.tuesday_open % 1) * 60))"/> - <t t-esc="'{:02d}:{:02d}'.format(int(selected_branch.tuesday_close), int((selected_branch.tuesday_close % 1) * 60))"/>
-                                                                </t>
-                                                                <t t-else="">Closed</t>
-                                                            </div>
-                                                        </div>
-                                                        <div class="hour-item d-flex justify-content-between align-items-center p-2 mb-2" style="border-bottom: 1px dashed rgba(255,255,255,0.1);">
-                                                            <div class="day-label">
-                                                                <span class="font-weight-bold">Wednesday</span>
-                                                            </div>
-                                                            <div class="hours-value" t-att-style="'color: ' + ('#ffffff' if selected_branch.wednesday_open > 0 else '#888') + '; font-weight: 600;'">
-                                                                <t t-if="selected_branch.wednesday_open > 0">
-                                                                    <t t-esc="'{:02d}:{:02d}'.format(int(selected_branch.wednesday_open), int((selected_branch.wednesday_open % 1) * 60))"/> - <t t-esc="'{:02d}:{:02d}'.format(int(selected_branch.wednesday_close), int((selected_branch.wednesday_close % 1) * 60))"/>
-                                                                </t>
-                                                                <t t-else="">Closed</t>
-                                                            </div>
-                                                        </div>
-                                                        <div class="hour-item d-flex justify-content-between align-items-center p-2 mb-2" style="border-bottom: 1px dashed rgba(255,255,255,0.1);">
-                                                            <div class="day-label">
-                                                                <span class="font-weight-bold">Thursday</span>
-                                                            </div>
-                                                            <div class="hours-value" t-att-style="'color: ' + ('#ffffff' if selected_branch.thursday_open > 0 else '#888') + '; font-weight: 600;'">
-                                                                <t t-if="selected_branch.thursday_open > 0">
-                                                                    <t t-esc="'{:02d}:{:02d}'.format(int(selected_branch.thursday_open), int((selected_branch.thursday_open % 1) * 60))"/> - <t t-esc="'{:02d}:{:02d}'.format(int(selected_branch.thursday_close), int((selected_branch.thursday_close % 1) * 60))"/>
-                                                                </t>
-                                                                <t t-else="">Closed</t>
-                                                            </div>
-                                                        </div>
-                                                        <div class="hour-item d-flex justify-content-between align-items-center p-2 mb-2" style="border-bottom: 1px dashed rgba(255,255,255,0.1);">
-                                                            <div class="day-label">
-                                                                <span class="font-weight-bold">Friday</span>
-                                                            </div>
-                                                            <div class="hours-value" t-att-style="'color: ' + ('#ffffff' if selected_branch.friday_open > 0 else '#888') + '; font-weight: 600;'">
-                                                                <t t-if="selected_branch.friday_open > 0">
-                                                                    <t t-esc="'{:02d}:{:02d}'.format(int(selected_branch.friday_open), int((selected_branch.friday_open % 1) * 60))"/> - <t t-esc="'{:02d}:{:02d}'.format(int(selected_branch.friday_close), int((selected_branch.friday_close % 1) * 60))"/>
-                                                                </t>
-                                                                <t t-else="">Closed</t>
-                                                            </div>
-                                                        </div>
-                                                        <div class="hour-item d-flex justify-content-between align-items-center p-2 mb-2" style="border-bottom: 1px dashed rgba(255,255,255,0.1);">
-                                                            <div class="day-label">
-                                                                <span class="font-weight-bold">Saturday</span>
-                                                            </div>
-                                                            <div class="hours-value" t-att-style="'color: ' + ('#ffffff' if selected_branch.saturday_open > 0 else '#888') + '; font-weight: 600;'">
-                                                                <t t-if="selected_branch.saturday_open > 0">
-                                                                    <t t-esc="'{:02d}:{:02d}'.format(int(selected_branch.saturday_open), int((selected_branch.saturday_open % 1) * 60))"/> - <t t-esc="'{:02d}:{:02d}'.format(int(selected_branch.saturday_close), int((selected_branch.saturday_close % 1) * 60))"/>
-                                                                </t>
-                                                                <t t-else="">Closed</t>
-                                                            </div>
-                                                        </div>
-                                                        <div class="hour-item d-flex justify-content-between align-items-center p-2">
-                                                            <div class="day-label">
-                                                                <span class="font-weight-bold">Sunday</span>
-                                                            </div>
-                                                            <div class="hours-value" t-att-style="'color: ' + ('#ffffff' if selected_branch.sunday_open > 0 else '#888') + '; font-weight: 600;'">
-                                                                <t t-if="selected_branch.sunday_open > 0">
-                                                                    <t t-esc="'{:02d}:{:02d}'.format(int(selected_branch.sunday_open), int((selected_branch.sunday_open % 1) * 60))"/> - <t t-esc="'{:02d}:{:02d}'.format(int(selected_branch.sunday_close), int((selected_branch.sunday_close % 1) * 60))"/>
-                                                                </t>
-                                                                <t t-else="">Closed</t>
-                                                            </div>
-                                                        </div>
-                                                    </t>
-                                                    <t t-else="">
-                                                        <div class="text-center p-3">
-                                                            <p class="text-light-muted">Select a branch to view hours</p>
-                                                        </div>
-                                                    </t>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Contact Info with Unique Style -->
-                                        <div class="col-md-6 mb-4">
-                                            <div class="contact-section">
-                                                <div class="d-flex align-items-center mb-3">
-                                                    <h5 class="font-weight-bold ml-3 mb-0">Contact Us</h5>
-                                                </div>
-
-                                                <div class="contact-list mt-3">
-                                                    <t t-if="selected_branch">
-                                                        <t t-if="selected_branch.phone">
-                                                            <div class="contact-item d-flex align-items-center mb-3">
-                                                                <div style="width: 36px; height: 36px; background: rgba(255,255,255,0.05); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px;">
-                                                                    <i class="fa fa-phone" style="color: #ffffff;"></i>
-                                                                </div>
-                                                                <div>
-                                                                    <div class="small text-muted">Phone</div>
-                                                                    <div class="font-weight-bold"><t t-esc="selected_branch.phone"/></div>
-                                                                </div>
-                                                            </div>
-                                                        </t>
-                                                        <t t-if="selected_branch.email">
-                                                            <div class="contact-item d-flex align-items-center mb-3">
-                                                                <div style="width: 36px; height: 36px; background: rgba(255,255,255,0.05); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px;">
-                                                                    <i class="fa fa-envelope" style="color: #ffffff;"></i>
-                                                                </div>
-                                                                <div>
-                                                                    <div class="small text-muted">Email</div>
-                                                                    <div class="font-weight-bold"><t t-esc="selected_branch.email"/></div>
-                                                                </div>
-                                                            </div>
-                                                        </t>
-                                                        <div class="contact-item d-flex align-items-center">
-                                                            <div style="width: 36px; height: 36px; background: rgba(255,255,255,0.05); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px;">
-                                                                <i class="fa fa-map-marker" style="color: #ffffff;"></i>
-                                                            </div>
-                                                            <div>
-                                                                <div class="small text-muted">Address</div>
-                                                                <div class="font-weight-bold">
-                                                                    <t t-if="selected_branch.street"><t t-esc="selected_branch.street"/></t>
-                                                                    <t t-if="selected_branch.city">, <t t-esc="selected_branch.city"/></t>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </t>
-                                                    <t t-else="">
-                                                        <div class="text-center p-3">
-                                                            <p class="text-light-muted">Select a branch to view contact information</p>
-                                                        </div>
-                                                    </t>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <style>
-                                @keyframes pulse {
-                                    0% {
-                                        transform: translate(-50%, -50%) scale(1);
-                                        opacity: 1;
-                                    }
-                                    100% {
-                                        transform: translate(-50%, -50%) scale(1.5);
-                                        opacity: 0;
-                                    }
-                                }
-                                .map-container:hover .map-overlay {
-                                    background: rgba(255,255,255,0.3);
-                                }
-                            </style>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- JavaScript for Service Selection with Enhanced Interaction -->
+                <!-- JavaScript for Service Selection -->
                 <script>
-                    let selectedTeamMember = 'any';
-                    let defaultStaffId = '1';
                     let selectedService = null;
 
-                    function selectTeamMember(element, memberId) {
-                        document.querySelectorAll('.team-card .card').forEach(card => {
-                            card.classList.remove('selected');
-                            card.style.cssText = '';
-                        });
-
-                        element.querySelector('.card').classList.add('selected');
-                        selectedTeamMember = memberId;
-                    }
-
                     function selectService(element, serviceId) {
-                        // Reset all services
                         document.querySelectorAll('.service-item').forEach(item => {
                             item.classList.remove('selected');
                             item.style.cssText = '';
@@ -971,7 +687,6 @@
                             if (radio) radio.checked = false;
                         });
 
-                        // Apply selection via CSS class
                         element.classList.add('selected');
                         const selectBtn = element.querySelector('.select-btn');
                         if (selectBtn) {
@@ -986,31 +701,19 @@
 
                     function searchServices(query) {
                         if (!query) {
-                            // If search is empty, show all services
                             document.querySelectorAll('.service-item').forEach(item => {
                                 item.parentElement.style.display = 'block';
                             });
                             return;
                         }
-
                         query = query.toLowerCase();
-
                         document.querySelectorAll('.service-item').forEach(item => {
-                            // Safely get title text
                             const titleElement = item.querySelector('.service-title');
                             const title = titleElement ? titleElement.textContent.toLowerCase() : '';
-
-                            // Safely get description text
                             const descElement = item.querySelector('.service-description');
                             const desc = descElement ? descElement.textContent.toLowerCase() : '';
-
                             const searchText = title + ' ' + desc;
-
-                            if (searchText.includes(query)) {
-                                item.parentElement.style.display = 'block';
-                            } else {
-                                item.parentElement.style.display = 'none';
-                            }
+                            item.parentElement.style.display = searchText.includes(query) ? 'block' : 'none';
                         });
                     }
 
@@ -1019,10 +722,7 @@
                             alert('Please select a service before continuing.');
                             return;
                         }
-                        
-                        const staffParam = selectedTeamMember === 'any' ? defaultStaffId : selectedTeamMember;
-                        let url = '/appointments/book?service_id=' + selectedService + '&amp;staff_id=' + staffParam;
-                        // Preserve promo code from URL if present
+                        let url = '/appointments/book?service_id=' + selectedService;
                         const urlParams = new URLSearchParams(window.location.search);
                         const promo = urlParams.get('promo');
                         if (promo) {
@@ -1030,15 +730,6 @@
                         }
                         window.location.href = url;
                     }
-
-                    document.addEventListener('DOMContentLoaded', function() {
-                        const urlParams = new URLSearchParams(window.location.search);
-                        const staffId = urlParams.get('staff_id');
-                        if (staffId) {
-                            selectedTeamMember = staffId;
-                            defaultStaffId = staffId;
-                        }
-                    });
                 </script>
             </div>
         </t>
@@ -1148,29 +839,24 @@
                                             </div>
                                         </div>
 
-                                        <!-- Staff Member Details with Enhanced Styling -->
+                                        <!-- Specialist (auto-assigned at booking) -->
                                         <div class="summary-item mb-4 staff-summary" style="border-radius: 15px; position: relative; overflow: hidden;">
-                                            <!-- Decorative Element -->
                                             <div style="position: absolute; top: -15px; right: -15px; width: 60px; height: 60px; border-radius: 50%; background: rgba(255,255,255,0.05); z-index: 1;"></div>
-
                                             <div class="d-flex align-items-center p-3 position-relative" style="z-index: 2;">
-                                                <t t-if="staff.image">
-                                                    <div style="width: 60px; height: 60px; min-width: 60px; border-radius: 50%; overflow: hidden; border: 3px solid white; box-shadow: 0 4px 10px rgba(0,0,0,0.1); margin-right: 15px;">
-                                                        <img t-att-src="'/web/image/custom.staff.member/%s/image/60x60' % staff.id"
-                                                             style="width: 100%; height: 100%; object-fit: cover;"
-                                                             alt="Staff Photo"/>
-                                                    </div>
-                                                </t>
-                                                <t t-else="">
-                                                    <div style="width: 60px; height: 60px; min-width: 60px; background: rgba(255,255,255,0.05); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); border: 3px solid white;">
-                                                        <i class="fa fa-user" style="color: #ffffff; font-size: 24px;"></i>
-                                                    </div>
-                                                </t>
+                                                <div style="width: 60px; height: 60px; min-width: 60px; background: rgba(255,255,255,0.05); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin-right: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.08); border: 3px solid white;">
+                                                    <i class="fa fa-user" style="color: #ffffff; font-size: 24px;"></i>
+                                                </div>
                                                 <div class="flex-grow-1">
                                                     <span class="d-block small text-muted mb-1" style="text-transform: uppercase; letter-spacing: 0.5px;">Specialist</span>
-                                                    <h6 class="font-weight-bold mb-1" style="color: #ffffff;"><t t-esc="staff.name"/></h6>
-                                                    <t t-if="staff.specialization">
+                                                    <h6 class="font-weight-bold mb-1" style="color: #ffffff;">
+                                                        <t t-if="staff"><t t-esc="staff.name"/></t>
+                                                        <t t-else="">Auto-assigned at booking</t>
+                                                    </h6>
+                                                    <t t-if="staff and staff.specialization">
                                                         <p class="text-light-muted small mb-0" style="font-style: italic;"><t t-esc="staff.specialization"/></p>
+                                                    </t>
+                                                    <t t-else="">
+                                                        <p class="text-light-muted small mb-0" style="font-style: italic;">We'll assign the best available specialist for your chosen time.</p>
                                                     </t>
                                                 </div>
                                             </div>
@@ -1236,10 +922,9 @@
                                             <i class="fa fa-user-circle mr-2" style="color: #ffffff;"></i>
                                             Your Information
                                         </h5>
-                                        <form id="booking-form" method="post" t-attf-action="/appointments/book?service_id={{service.id}}&amp;staff_id={{staff.id}}">
+                                        <form id="booking-form" method="post" t-attf-action="/appointments/book?service_id={{service.id}}">
                                             <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
                                             <input type="hidden" name="service_id" t-att-value="service.id"/>
-                                            <input type="hidden" name="staff_id" t-att-value="staff.id"/>
                                             <input type="hidden" name="appointment_datetime" id="appointment_datetime"/>
 
                                             <div class="form-group mb-3">
@@ -1274,78 +959,18 @@
                                                 <div id="promo-feedback" class="mt-2" style="display: none;"></div>
                                             </div>
 
-                                            <!-- Health Disclosure Section -->
-                                            <div class="form-group mb-4">
-                                                <label class="font-weight-bold small mb-3" style="color: rgba(255,255,255,0.7);">
-                                                    <i class="fa fa-heartbeat mr-1" style="color: #ffffff;"></i>
-                                                    Health Disclosure (Tick where applicable)
-                                                </label>
-                                                <div class="health-disclosure-options" style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px;">
-                                                    <div class="custom-control custom-checkbox mb-2">
-                                                        <input type="checkbox" class="custom-control-input" id="has_allergies" name="has_allergies" value="1" onchange="toggleAllergiesField()"/>
-                                                        <label class="custom-control-label" for="has_allergies" style="color: rgba(255,255,255,0.7); cursor: pointer;">
-                                                            Allergies
-                                                        </label>
-                                                    </div>
-                                                    <div id="allergies_details_container" style="display: none; margin-left: 25px; margin-bottom: 10px;">
-                                                        <input type="text" class="form-control form-control-sm" name="allergies_details" 
-                                                               placeholder="Please specify your allergies..." 
-                                                               style="border-radius: 8px; border-color: rgba(255,255,255,0.2);"/>
-                                                    </div>
-                                                    
-                                                    <div class="custom-control custom-checkbox mb-2">
-                                                        <input type="checkbox" class="custom-control-input" id="has_eye_conditions" name="has_eye_conditions" value="1"/>
-                                                        <label class="custom-control-label" for="has_eye_conditions" style="color: rgba(255,255,255,0.7); cursor: pointer;">
-                                                            Eye conditions
-                                                        </label>
-                                                    </div>
-                                                    
-                                                    <div class="custom-control custom-checkbox mb-2">
-                                                        <input type="checkbox" class="custom-control-input" id="is_pregnant" name="is_pregnant" value="1"/>
-                                                        <label class="custom-control-label" for="is_pregnant" style="color: rgba(255,255,255,0.7); cursor: pointer;">
-                                                            Pregnancy
-                                                        </label>
-                                                    </div>
-                                                    
-                                                    <div class="custom-control custom-checkbox">
-                                                        <input type="checkbox" class="custom-control-input" id="no_health_conditions" name="no_health_conditions" value="1"/>
-                                                        <label class="custom-control-label" for="no_health_conditions" style="color: rgba(255,255,255,0.7); cursor: pointer;">
-                                                            None
-                                                        </label>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            
                                             <!-- Desired Outcome Section -->
                                             <div class="form-group mb-4">
                                                 <label class="font-weight-bold small mb-2" style="color: rgba(255,255,255,0.7);">
                                                     <i class="fa fa-star mr-1" style="color: #ffffff;"></i>
-                                                    Desired Outcome
+                                                    Desired Outcome <small>(optional)</small>
                                                 </label>
                                                 <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 12px;">
-                                                    <div class="mb-3">
-                                                        <label class="small text-muted mb-1">What lash look are you hoping to achieve?</label>
-                                                        <textarea class="form-control" name="desired_lash_look" rows="2" 
-                                                                  placeholder="e.g., Natural, Dramatic, Cat eye, Wispy..."
-                                                                  style="border-radius: 10px; padding: 12px; border-color: rgba(255,255,255,0.2);"></textarea>
-                                                    </div>
-                                                    
                                                     <div>
-                                                        <label class="small text-muted mb-2">Have you had lash extensions before?</label>
-                                                        <div class="d-flex">
-                                                            <div class="custom-control custom-radio mr-4">
-                                                                <input type="radio" class="custom-control-input" id="prev_extensions_yes" name="has_previous_extensions" value="yes"/>
-                                                                <label class="custom-control-label" for="prev_extensions_yes" style="color: rgba(255,255,255,0.7); cursor: pointer;">
-                                                                    Yes
-                                                                </label>
-                                                            </div>
-                                                            <div class="custom-control custom-radio">
-                                                                <input type="radio" class="custom-control-input" id="prev_extensions_no" name="has_previous_extensions" value="no"/>
-                                                                <label class="custom-control-label" for="prev_extensions_no" style="color: rgba(255,255,255,0.7); cursor: pointer;">
-                                                                    No
-                                                                </label>
-                                                            </div>
-                                                        </div>
+                                                        <label class="small text-muted mb-1">What results are you hoping to achieve?</label>
+                                                        <textarea class="form-control" name="desired_lash_look" rows="2" 
+                                                                  placeholder="e.g., Natural look, Dramatic, Subtle enhancement..."
+                                                                  style="border-radius: 10px; padding: 12px; border-color: rgba(255,255,255,0.2);"></textarea>
                                                     </div>
                                                 </div>
                                             </div>
@@ -1518,20 +1143,6 @@
                         calendar.render();
                     });
 
-                    // Health disclosure - toggle allergies details field
-                    function toggleAllergiesField() {
-                        const checkbox = document.getElementById('has_allergies');
-                        const detailsContainer = document.getElementById('allergies_details_container');
-                        if (checkbox.checked) {
-                            detailsContainer.style.display = 'block';
-                        } else {
-                            detailsContainer.style.display = 'none';
-                            // Clear the input when unchecked
-                            const allergiesInput = detailsContainer.querySelector('input');
-                            if (allergiesInput) allergiesInput.value = '';
-                        }
-                    }
-
                     // Promo code validation
                     let appliedPromoCode = null;
                     let promoDiscount = 0;
@@ -1541,7 +1152,7 @@
                         const promoCode = promoInput.value.trim();
                         const feedback = document.getElementById('promo-feedback');
                         const serviceId = <t t-raw="service.id"/>;
-                        const branchId = <t t-raw="staff.branch_id.id if staff.branch_id else 'null'"/>;
+                        const branchId = <t t-raw="(branch.id if branch else (staff.branch_id.id if staff and staff.branch_id else 'null'))"/>;
                         const servicePrice = <t t-raw="service.price"/>;
                         const bookingFee = <t t-raw="service.booking_fee if service.fee_type == 'partial' else 0"/>;
                         
