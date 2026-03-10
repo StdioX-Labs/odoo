@@ -383,6 +383,23 @@ class AppointmentController(http.Controller):
             # Increment promo code usage if applied
             if promo and discount_amount > 0:
                 promo.sudo().write({'current_uses': promo.current_uses + 1})
+
+            # If no payment providers are configured/published, skip payment step and auto-confirm
+            acquirers = request.env['payment.provider'].sudo().search([
+                ('state', 'in', ['enabled', 'test']),
+                ('is_published', '=', True)
+            ])
+            if not acquirers:
+                amount_to_charge = appointment.service_id.get_amount_to_charge()
+                appointment.write({
+                    'payment_status': 'paid',
+                    'paid_amount': amount_to_charge,
+                    'payment_date': fields.Datetime.now(),
+                    'payment_method': 'No Payment Required',
+                    'payment_reference': f'FREE-{appointment.id}',
+                })
+                appointment.action_confirm()
+                return request.redirect(f'/appointments/payment/success?appointment_id={appointment.id}')
             
             return request.redirect(f'/appointments/payment?appointment_id={appointment.id}')
             
