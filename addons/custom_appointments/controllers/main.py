@@ -404,7 +404,8 @@ class AppointmentController(http.Controller):
             return request.redirect(f'/appointments/payment?appointment_id={appointment.id}')
             
         except Exception as e:
-            return request.redirect(f'/appointments?error={str(e)}')
+            err_msg = str(e).replace('\n', ' ').replace('\r', ' ')[:200]
+            return request.redirect(f'/appointments?error={err_msg}')
     
     @http.route('/appointments/payment', type='http', auth='public', website=True, methods=['GET', 'POST'])
     def payment_page(self, **kwargs):

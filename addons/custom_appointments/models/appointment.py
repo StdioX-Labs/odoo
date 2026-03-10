@@ -367,8 +367,11 @@ class Appointment(models.Model):
             
             if self.payment_status == 'paid' and self.paid_amount > 0:
                 _logger.info(f"Registering payment for appointment {self.id}")
-                
-                bank_journal = self.env['account.journal'].search([('type', '=', 'bank')], limit=1)
+                # Use same company as invoice to avoid multi-company error
+                bank_journal = self.env['account.journal'].search([
+                    ('type', '=', 'bank'),
+                    ('company_id', '=', invoice.company_id.id),
+                ], limit=1)
                 if not bank_journal:
                     _logger.error(f"No bank journal found! Cannot create payment for appointment {self.id}")
                     return invoice
