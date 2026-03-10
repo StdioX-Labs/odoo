@@ -413,18 +413,33 @@ class AppointmentController(http.Controller):
             appointment_id = kwargs.get('appointment_id')
             if not appointment_id:
                 return request.redirect('/appointments')
-            
+
             appointment = request.env['custom.appointment'].sudo().browse(int(appointment_id))
-            if not appointment.exists() or appointment.payment_status == 'paid':
+            if not appointment.exists():
                 return request.redirect('/appointments')
-            
+            if appointment.payment_status == 'paid':
+                return request.redirect(f'/appointments/payment/success?appointment_id={appointment_id}')
+
             acquirers = request.env['payment.provider'].sudo().search([
                 ('state', 'in', ['enabled', 'test']),
                 ('is_published', '=', True)
             ])
-            
+
+            # No payment providers: auto-confirm and redirect to success (do not show payment page)
+            if not acquirers:
+                amount_to_charge = appointment.service_id.get_amount_to_charge()
+                appointment.write({
+                    'payment_status': 'paid',
+                    'paid_amount': amount_to_charge,
+                    'payment_date': fields.Datetime.now(),
+                    'payment_method': 'No Payment Required',
+                    'payment_reference': f'FREE-{appointment.id}',
+                })
+                appointment.action_confirm()
+                return request.redirect(f'/appointments/payment/success?appointment_id={appointment.id}')
+
             amount_to_charge = appointment.service_id.get_amount_to_charge()
-            
+
             return request.render('custom_appointments.payment_page', {
                 'appointment': appointment,
                 'acquirers': acquirers,
