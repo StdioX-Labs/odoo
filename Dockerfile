@@ -11,7 +11,7 @@ RUN apt-get update && \
 COPY --chown=odoo:odoo addons/ /mnt/extra-addons/
 COPY --chown=odoo:odoo config/odoo.conf /etc/odoo/odoo.conf
 
-USER odoo
+USER root
 
 EXPOSE 8069 8072
 
