@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <data>
+    <data noupdate="1">
         <!-- Demo Appointments -->
         <record id="appointment_1" model="custom.appointment">
             <field name="name">Business Strategy Consultation - John Doe</field>
