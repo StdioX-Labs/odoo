@@ -28,6 +28,14 @@ for att in env['ir.attachment'].search([('store_fname', '!=', False)]):
         unlinked += 1
 env.cr.commit()
 print(f'Unlinked {unlinked} orphan attachments (missing filestore files).')
+
+# Clear website logo/favicon so the UI stops requesting missing files
+Website = env.get('website.website')
+if Website:
+    for w in Website.search([]):
+        w.write({'logo': False, 'favicon': False})
+    env.cr.commit()
+    print('Cleared logo and favicon on all website records. Re-upload in Website Settings.')
 ```
 
 **Option B – if you have the repo in the container:**
@@ -37,6 +45,15 @@ odoo shell -d revive --config=/etc/odoo/odoo.conf < scripts/clean_orphan_attachm
 ```
 
 After this, broken image requests (e.g. `/web/image/company.service/24/image`) will stop raising 500; Odoo will show placeholder or empty for those fields.
+
+**If you still get 500 for `/web/image/website/1/logo/Home`**, the website record is still pointing at a missing image. In Odoo shell run this to clear logo and favicon so the UI stops requesting them:
+
+```python
+if env.get('website.website'):
+    env['website.website'].search([]).write({'logo': False, 'favicon': False})
+env.cr.commit()
+print('Cleared. Re-upload logo/favicon in Website Settings.')
+```
 
 ## 2. Clear stale asset bundles (optional, SQL)
 

@@ -21,3 +21,11 @@ for att in env['ir.attachment'].search([('store_fname', '!=', False)]):
         unlinked += 1
 env.cr.commit()
 print(f'Unlinked {unlinked} orphan attachments (missing filestore files).')
+
+# Clear website logo/favicon so UI stops requesting missing files (stops 500 on /web/image/website/1/logo)
+Website = env.get('website.website')
+if Website:
+    for w in Website.search([]):
+        w.write({'logo': False, 'favicon': False})
+    env.cr.commit()
+    print('Cleared logo and favicon on all website records. Re-upload in Website Settings.')
