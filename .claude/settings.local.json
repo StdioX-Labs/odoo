@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(docker compose:*)",
-      "Bash(MSYS_NO_PATHCONV=1 docker compose:*)"
+      "Bash(MSYS_NO_PATHCONV=1 docker compose:*)",
+      "WebFetch(domain:revive.apps.stdiox.com)"
     ]
   }
 }

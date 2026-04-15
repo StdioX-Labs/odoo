@@ -21,11 +21,11 @@
     --text-secondary: rgba(255, 255, 255, 0.65);
     --text-muted: rgba(255, 255, 255, 0.38);
 
-    /* Rose Gold Accent */
-    --accent: #c9956a;
-    --accent-hover: #d4a574;
-    --accent-glow: rgba(201, 149, 106, 0.12);
-    --accent-blush: #f4a7b9;
+    /* Olive Green Accent */
+    --accent: #556b2f;
+    --accent-hover: #6b8a3a;
+    --accent-glow: rgba(85, 107, 47, 0.12);
+    --accent-blush: #7a9e3e;
 
     /* Semantic */
     --success: #10b981;
