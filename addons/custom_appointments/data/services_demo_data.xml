@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Demo Service Categories -->
+    <data noupdate="1">
+        <!-- Demo Service Categories -->
     <record id="category_consultation" model="service.category">
         <field name="name">Consultation</field>
         <field name="code">CONSULT</field>
@@ -96,4 +97,5 @@
         <field name="preparation_time">0.25</field>
         <field name="max_advance_booking">14</field>
     </record>
+    </data>
 </odoo>

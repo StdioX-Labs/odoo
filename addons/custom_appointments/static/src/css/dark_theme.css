@@ -14,7 +14,7 @@
 
     /* Borders */
     --border: rgba(255, 255, 255, 0.07);
-    --border-accent: rgba(201, 149, 106, 0.3);
+    --border-accent: rgba(85, 107, 47, 0.3);
 
     /* Text */
     --text-primary: #ffffff;
@@ -384,13 +384,13 @@ div[class*="hero-bg"] {
 .staff-card.selected {
     border: 2px solid var(--accent) !important;
     background: linear-gradient(145deg,
-        rgba(201, 149, 106, 0.12) 0%,
-        rgba(201, 149, 106, 0.05) 60%,
+        rgba(85, 107, 47, 0.12) 0%,
+        rgba(85, 107, 47, 0.05) 60%,
         rgba(13, 17, 23, 0.8) 100%) !important;
     box-shadow:
-        0 0 0 1px rgba(201, 149, 106, 0.4),
-        0 8px 32px rgba(201, 149, 106, 0.25),
-        0 0 60px rgba(201, 149, 106, 0.1) !important;
+        0 0 0 1px rgba(85, 107, 47, 0.4),
+        0 8px 32px rgba(85, 107, 47, 0.25),
+        0 0 60px rgba(85, 107, 47, 0.1) !important;
     transform: translateY(-4px) !important;
     position: relative !important;
 }
@@ -425,7 +425,7 @@ a.btn-primary {
     letter-spacing: 1.5px !important;
     text-transform: uppercase !important;
     font-size: 0.85rem !important;
-    box-shadow: 0 4px 15px rgba(201, 149, 106, 0.2) !important;
+    box-shadow: 0 4px 15px rgba(85, 107, 47, 0.2) !important;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
     text-decoration: none !important;
 }
@@ -437,7 +437,7 @@ a.btn-primary:hover,
     background: var(--accent-hover) !important;
     color: var(--text-primary) !important;
     transform: translateY(-2px) !important;
-    box-shadow: 0 8px 25px rgba(201, 149, 106, 0.35) !important;
+    box-shadow: 0 8px 25px rgba(85, 107, 47, 0.35) !important;
 }
 
 /* Secondary / Outline accent */
@@ -512,7 +512,7 @@ textarea:focus,
 .form-control:focus,
 .form-select:focus {
     border-color: var(--border-accent) !important;
-    box-shadow: 0 0 0 4px rgba(201, 149, 106, 0.1) !important;
+    box-shadow: 0 0 0 4px rgba(85, 107, 47, 0.1) !important;
     outline: none !important;
     background: rgba(17, 24, 39, 0.9) !important;
 }
@@ -533,13 +533,13 @@ label,
 .payment-option .card.border-primary {
     border: 2px solid var(--accent) !important;
     background: linear-gradient(145deg,
-        rgba(201, 149, 106, 0.12) 0%,
-        rgba(201, 149, 106, 0.05) 60%,
+        rgba(85, 107, 47, 0.12) 0%,
+        rgba(85, 107, 47, 0.05) 60%,
         rgba(13, 17, 23, 0.8) 100%) !important;
     box-shadow:
-        0 0 0 1px rgba(201, 149, 106, 0.4),
-        0 8px 32px rgba(201, 149, 106, 0.25),
-        0 0 60px rgba(201, 149, 106, 0.1) !important;
+        0 0 0 1px rgba(85, 107, 47, 0.4),
+        0 8px 32px rgba(85, 107, 47, 0.25),
+        0 0 60px rgba(85, 107, 47, 0.1) !important;
     transform: translateY(-4px) !important;
     position: relative !important;
 }
@@ -548,8 +548,8 @@ label,
 .service-item.selected {
     border: 2px solid var(--accent) !important;
     border-left: 4px solid var(--accent) !important;
-    background: linear-gradient(145deg, rgba(201, 149, 106, 0.08) 0%, rgba(201, 149, 106, 0.03) 100%) !important;
-    box-shadow: 0 0 20px rgba(201, 149, 106, 0.2) !important;
+    background: linear-gradient(145deg, rgba(85, 107, 47, 0.08) 0%, rgba(85, 107, 47, 0.03) 100%) !important;
+    box-shadow: 0 0 20px rgba(85, 107, 47, 0.2) !important;
     transform: translateY(-3px) !important;
 }
 
@@ -589,7 +589,7 @@ label,
     background: var(--accent) !important;
     color: var(--text-primary) !important;
     border-color: var(--accent) !important;
-    box-shadow: 0 4px 15px rgba(201, 149, 106, 0.3) !important;
+    box-shadow: 0 4px 15px rgba(85, 107, 47, 0.3) !important;
 }
 
 /* ===================================================
@@ -633,7 +633,7 @@ label,
 }
 
 .fc-day-today {
-    background: rgba(201, 149, 106, 0.1) !important;
+    background: rgba(85, 107, 47, 0.1) !important;
 }
 
 .fc-day-today .fc-daygrid-day-number {
@@ -863,7 +863,7 @@ footer .copyright {
    17. TERMS PAGE STYLES (moved from inline <style>)
    =================================================== */
 .terms-intro {
-    background: rgba(201, 149, 106, 0.05);
+    background: rgba(85, 107, 47, 0.05);
     padding: 25px;
     border-left: 4px solid var(--accent);
     margin-bottom: 40px;
@@ -882,7 +882,7 @@ footer .copyright {
 }
 
 .terms-section:hover {
-    box-shadow: 0 5px 25px rgba(201, 149, 106, 0.1);
+    box-shadow: 0 5px 25px rgba(85, 107, 47, 0.1);
     border-color: var(--border-accent);
     transform: translateY(-2px);
 }
@@ -929,7 +929,7 @@ footer .copyright {
 }
 
 .highlight-box {
-    background: linear-gradient(135deg, rgba(201, 149, 106, 0.06), rgba(201, 149, 106, 0.1));
+    background: linear-gradient(135deg, rgba(85, 107, 47, 0.06), rgba(85, 107, 47, 0.1));
     border-radius: 10px;
     padding: 20px;
     margin: 15px 0;
@@ -1320,7 +1320,7 @@ input[type="search"] {
     width: 700px;
     height: 700px;
     border-radius: 50%;
-    background: radial-gradient(circle, rgba(201, 149, 106, 0.1) 0%, transparent 65%);
+    background: radial-gradient(circle, rgba(85, 107, 47, 0.1) 0%, transparent 65%);
     pointer-events: none;
 }
 
@@ -1510,7 +1510,7 @@ input[type="search"] {
 
 .revive-step-card--featured {
     border-color: var(--border-accent);
-    background: linear-gradient(145deg, rgba(201, 149, 106, 0.07) 0%, var(--bg-secondary) 100%);
+    background: linear-gradient(145deg, rgba(85, 107, 47, 0.07) 0%, var(--bg-secondary) 100%);
     box-shadow: 0 0 30px var(--accent-glow);
 }
 
@@ -1644,7 +1644,7 @@ input[type="search"] {
     width: 800px;
     height: 400px;
     border-radius: 50%;
-    background: radial-gradient(ellipse, rgba(201, 149, 106, 0.1) 0%, transparent 65%);
+    background: radial-gradient(ellipse, rgba(85, 107, 47, 0.1) 0%, transparent 65%);
     pointer-events: none;
 }
 
@@ -1705,7 +1705,7 @@ input[type="search"] {
     letter-spacing: 2.5px;
     text-transform: uppercase;
     color: var(--accent) !important;
-    background: rgba(201, 149, 106, 0.1);
+    background: rgba(85, 107, 47, 0.1);
     border: 1px solid var(--border-accent);
     border-radius: 20px;
     padding: 3px 12px;
@@ -1752,7 +1752,7 @@ input[type="search"] {
 .bk-branch-card:hover {
     border-color: var(--border-accent);
     transform: translateY(-3px);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(201, 149, 106, 0.08);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4), 0 0 20px rgba(85, 107, 47, 0.08);
 }
 
 /* Left accent bar — hidden by default, rose gold when selected */
@@ -1788,7 +1788,7 @@ input[type="search"] {
     height: 38px;
     min-width: 38px;
     border-radius: 10px;
-    background: rgba(201, 149, 106, 0.1);
+    background: rgba(85, 107, 47, 0.1);
     border: 1px solid var(--border-accent);
     display: flex;
     align-items: center;
@@ -1802,7 +1802,7 @@ input[type="search"] {
 }
 
 .bk-branch-card.selected .bk-branch-icon {
-    background: rgba(201, 149, 106, 0.2);
+    background: rgba(85, 107, 47, 0.2);
     border-color: var(--accent);
 }
 
@@ -1837,7 +1837,7 @@ input[type="search"] {
     background: var(--accent);
     border-color: var(--accent);
     opacity: 1;
-    box-shadow: 0 0 12px rgba(201, 149, 106, 0.5);
+    box-shadow: 0 0 12px rgba(85, 107, 47, 0.5);
 }
 
 .bk-branch-card.selected .bk-branch-check i {
@@ -1904,12 +1904,12 @@ input[type="search"] {
 .bk-branch-card.selected {
     border-color: var(--border-accent);
     background: linear-gradient(145deg,
-        rgba(201, 149, 106, 0.1) 0%,
-        rgba(201, 149, 106, 0.04) 60%,
+        rgba(85, 107, 47, 0.1) 0%,
+        rgba(85, 107, 47, 0.04) 60%,
         var(--bg-secondary) 100%);
     box-shadow:
-        0 0 0 1px rgba(201, 149, 106, 0.35),
-        0 8px 32px rgba(201, 149, 106, 0.18);
+        0 0 0 1px rgba(85, 107, 47, 0.35),
+        0 8px 32px rgba(85, 107, 47, 0.18);
     transform: translateY(-3px);
 }
 
@@ -1947,7 +1947,7 @@ a.btn-directions:focus {
     background: var(--accent) !important;
     color: #ffffff !important;
     transform: translateY(-3px) !important;
-    box-shadow: 0 8px 28px rgba(201, 149, 106, 0.55) !important;
+    box-shadow: 0 8px 28px rgba(85, 107, 47, 0.55) !important;
 }
 
 button.btn-directions:hover i,
@@ -1960,7 +1960,7 @@ a.btn-directions:focus i {
 button.btn-directions:active,
 a.btn-directions:active {
     transform: translateY(-1px) !important;
-    box-shadow: 0 4px 14px rgba(201, 149, 106, 0.4) !important;
+    box-shadow: 0 4px 14px rgba(85, 107, 47, 0.4) !important;
 }
 
 /* Override wildcard .location-card * color for Get Directions button */
@@ -2023,13 +2023,13 @@ a.btn-directions:active {
 .bk-staff-inner.selected {
     border: 2px solid var(--accent) !important;
     background: linear-gradient(145deg,
-        rgba(201, 149, 106, 0.12) 0%,
-        rgba(201, 149, 106, 0.05) 60%,
+        rgba(85, 107, 47, 0.12) 0%,
+        rgba(85, 107, 47, 0.05) 60%,
         rgba(13, 17, 23, 0.8) 100%) !important;
     box-shadow:
-        0 0 0 1px rgba(201, 149, 106, 0.4),
-        0 8px 32px rgba(201, 149, 106, 0.25),
-        0 0 60px rgba(201, 149, 106, 0.1) !important;
+        0 0 0 1px rgba(85, 107, 47, 0.4),
+        0 8px 32px rgba(85, 107, 47, 0.25),
+        0 0 60px rgba(85, 107, 47, 0.1) !important;
     transform: translateY(-4px) !important;
 }
 
@@ -2039,14 +2039,14 @@ a.btn-directions:active {
     height: 100px !important;
     object-fit: cover !important;
     border: 3px solid var(--border-accent) !important;
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(201, 149, 106, 0.15) !important;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(85, 107, 47, 0.15) !important;
 }
 
 /* Staff avatar placeholder circle */
 .staff-avatar-placeholder {
     width: 100px !important;
     height: 100px !important;
-    background: linear-gradient(135deg, rgba(201, 149, 106, 0.15) 0%, rgba(201, 149, 106, 0.05) 100%) !important;
+    background: linear-gradient(135deg, rgba(85, 107, 47, 0.15) 0%, rgba(85, 107, 47, 0.05) 100%) !important;
     border: 2px solid var(--border-accent) !important;
     color: var(--accent) !important;
 }
@@ -2059,7 +2059,7 @@ a.btn-directions:active {
 .card.selected .staff-avatar-img,
 .bk-staff-inner.selected .staff-avatar-img {
     border-color: var(--accent) !important;
-    box-shadow: 0 0 0 4px rgba(201, 149, 106, 0.25) !important;
+    box-shadow: 0 0 0 4px rgba(85, 107, 47, 0.25) !important;
 }
 
 /* Icon circles (contact section + selection summary) */
@@ -2067,7 +2067,7 @@ a.btn-directions:active {
     width: 40px !important;
     height: 40px !important;
     min-width: 40px !important;
-    background: rgba(201, 149, 106, 0.1) !important;
+    background: rgba(85, 107, 47, 0.1) !important;
     border: 1px solid var(--border-accent) !important;
     border-radius: 50% !important;
     display: flex !important;
@@ -2106,7 +2106,7 @@ a.btn-directions:active {
 
 /* Selected time slot display */
 .selected-time-display {
-    background: rgba(201, 149, 106, 0.06) !important;
+    background: rgba(85, 107, 47, 0.06) !important;
 }
 
 .selected-time-display * {
@@ -2121,7 +2121,7 @@ a.btn-directions:active {
 
 /* Section card headers — consistent dark gradient */
 .card-header {
-    background: linear-gradient(135deg, rgba(201, 149, 106, 0.08) 0%, rgba(13, 17, 23, 0.9) 100%) !important;
+    background: linear-gradient(135deg, rgba(85, 107, 47, 0.08) 0%, rgba(13, 17, 23, 0.9) 100%) !important;
     border-bottom: 1px solid var(--border-accent) !important;
     border-radius: 16px 16px 0 0 !important;
 }

@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <!-- Demo Branches -->
+    <data noupdate="1">
+        <!-- Demo Branches -->
     <record id="branch_main" model="custom.branch">
         <field name="name">Main Office</field>
         <field name="code">MAIN</field>
@@ -58,4 +59,5 @@
         <field name="end_time">18.0</field>
         <field name="saturday_available">True</field>
     </record>
+    </data>
 </odoo>

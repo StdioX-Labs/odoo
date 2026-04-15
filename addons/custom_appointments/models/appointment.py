@@ -282,8 +282,11 @@ class Appointment(models.Model):
         self.state = 'confirmed'
         
         if not self.invoice_id:
-            _logger.info(f"Creating invoice for appointment {self.id}")
-            self._create_and_pay_invoice()
+            if self.paid_amount and self.paid_amount > 0:
+                _logger.info(f"Creating invoice for appointment {self.id}")
+                self._create_and_pay_invoice()
+            else:
+                _logger.info(f"Skipping invoice creation for appointment {self.id} (paid_amount={self.paid_amount})")
         
         _logger.info(f"Calling _send_confirmation_notifications() for appointment {self.id}")
         self._send_confirmation_notifications()
@@ -364,8 +367,11 @@ class Appointment(models.Model):
             
             if self.payment_status == 'paid' and self.paid_amount > 0:
                 _logger.info(f"Registering payment for appointment {self.id}")
-                
-                bank_journal = self.env['account.journal'].search([('type', '=', 'bank')], limit=1)
+                # Use same company as invoice to avoid multi-company error
+                bank_journal = self.env['account.journal'].search([
+                    ('type', '=', 'bank'),
+                    ('company_id', '=', invoice.company_id.id),
+                ], limit=1)
                 if not bank_journal:
                     _logger.error(f"No bank journal found! Cannot create payment for appointment {self.id}")
                     return invoice

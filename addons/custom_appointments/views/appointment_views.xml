@@ -119,22 +119,9 @@
                     </group>
                     
                     <notebook>
-                        <page string="Health Disclosure" name="health_disclosure">
-                            <div class="alert alert-info" role="alert" style="margin-bottom: 15px;">
-                                <strong><i class="fa fa-heartbeat"/> Customer Health Information</strong> - Please review before the appointment
-                            </div>
+                        <page string="Desired Outcome" name="desired_outcome">
                             <group>
-                                <group string="Health Conditions">
-                                    <field name="has_allergies"/>
-                                    <field name="allergies_details" invisible="not has_allergies"/>
-                                    <field name="has_eye_conditions"/>
-                                    <field name="is_pregnant"/>
-                                    <field name="no_health_conditions"/>
-                                </group>
-                                <group string="Desired Outcome">
-                                    <field name="desired_lash_look"/>
-                                    <field name="has_previous_extensions"/>
-                                </group>
+                                <field name="desired_lash_look"/>
                             </group>
                         </page>
                         <page string="Description">
