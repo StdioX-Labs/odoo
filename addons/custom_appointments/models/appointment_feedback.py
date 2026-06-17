@@ -126,6 +126,22 @@ class AppointmentFeedback(models.Model):
             if now >= due:
                 fb._send_request(settings)
 
+    def _feedback_request_body(self, settings):
+        """Build the feedback request email body. Use the admin-configured
+        template from settings when set, otherwise fall back to the bundled
+        feedback_request.html file."""
+        self.ensure_one()
+        template = (settings.feedback_request_email_template or '').strip()
+        if not template:
+            template = self.appointment_id._load_email_template('feedback_request')
+        return template.format(
+            customer_name=self.customer_name or 'there',
+            company_name=self.env.company.name,
+            service_name=self.service_id.name or '',
+            staff_name=self.staff_member_id.name or '',
+            feedback_link=self._get_feedback_link(),
+        )
+
     def _send_request(self, settings):
         self.ensure_one()
         link = self._get_feedback_link()
@@ -133,14 +149,7 @@ class AppointmentFeedback(models.Model):
 
         if settings.feedback_channel in ('email', 'both') and self.customer_email:
             try:
-                template = self.appointment_id._load_email_template('feedback_request')
-                body_html = template.format(
-                    customer_name=self.customer_name or 'there',
-                    company_name=company.name,
-                    service_name=self.service_id.name or '',
-                    staff_name=self.staff_member_id.name or '',
-                    feedback_link=link,
-                )
+                body_html = self._feedback_request_body(settings)
                 email_from = (self.branch_id.email or company.email or 'noreply@localhost')
                 self.env['mail.mail'].sudo().create({
                     'subject': settings.feedback_request_email_subject or 'We value your feedback',
