@@ -205,7 +205,30 @@ class Appointment(models.Model):
                     conflicting_appointments.start.strftime('%Y-%m-%d %H:%M'),
                     conflicting_appointments.stop.strftime('%Y-%m-%d %H:%M')
                 ))
-    
+
+    @api.constrains('staff_member_id', 'service_id')
+    def _check_staff_allowed_for_service(self):
+        """Enforce that a service requiring specific staff is only booked with
+        one of its allowed staff members."""
+        for appointment in self:
+            service = appointment.service_id
+            staff = appointment.staff_member_id
+            if not service or not staff:
+                continue
+            if not service.requires_specific_staff:
+                continue
+            if not service.allowed_staff_ids:
+                raise ValidationError(_(
+                    "No staff are currently configured to provide '%s'. "
+                    "Please contact us to book this service."
+                ) % service.name)
+            if not service.is_staff_allowed(staff):
+                names = ", ".join(service.allowed_staff_ids.mapped('name'))
+                raise ValidationError(_(
+                    'The service "%s" can only be provided by: %s. '
+                    'Please choose one of these staff members.'
+                ) % (service.name, names))
+
     def _find_or_create_partner(self, name, email, phone=None):
         """Find existing partner by email or create a new one"""
         Partner = self.env['res.partner'].sudo()

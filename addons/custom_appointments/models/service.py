@@ -1,3 +1,5 @@
+import json
+
 from odoo import models, fields, api
 
 
@@ -95,3 +97,19 @@ class CompanyService(models.Model):
             domain.append(('category_id', '=', category_id))
         
         return self.search(domain, order='sequence, name')
+
+    def is_staff_allowed(self, staff):
+        """Return True if `staff` may provide this service."""
+        self.ensure_one()
+        if not self.requires_specific_staff:
+            return True
+        return staff in self.allowed_staff_ids
+
+    def get_allowed_staff_json(self):
+        """JSON string of allowed staff [{id, name}] for the booking UI."""
+        self.ensure_one()
+        if not self.requires_specific_staff:
+            return "[]"
+        return json.dumps([
+            {'id': s.id, 'name': s.name} for s in self.allowed_staff_ids
+        ])

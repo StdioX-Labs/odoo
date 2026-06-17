@@ -710,7 +710,7 @@
                                                     <div class="row">
                                                         <t t-foreach="services.filtered(lambda s: s.category_id.id == category.id)" t-as="service">
                                                             <div class="col-lg-6 col-md-12 mb-4">
-                                                                <div class="service-item h-100" style="background: white; border: none; border-radius: 16px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 3px 15px rgba(0,0,0,0.05);" t-att-onclick="'selectService(this, ' + str(service.id) + ')'">
+                                                                <div class="service-item h-100" style="background: white; border: none; border-radius: 16px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 3px 15px rgba(0,0,0,0.05);" t-att-data-requires-specific-staff="'1' if service.requires_specific_staff else '0'" t-att-data-allowed-staff="service.get_allowed_staff_json()" t-att-onclick="'selectService(this, ' + str(service.id) + ')'">
                                                                     <div class="card border-0 h-100">
                                                                         <div class="card-body p-0">
                                                                             <div class="row no-gutters h-100">
@@ -1011,11 +1011,30 @@
                     </div>
                 </div>
 
+                <!-- Staff switch dialog (requires_specific_staff) -->
+                <div class="modal fade" id="staffSwitchModal" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content" style="border-radius: 16px;">
+                            <div class="modal-header" style="border-bottom: 1px solid #fff0f6;">
+                                <h5 class="modal-title" style="color: #ff69b4;">Staff required for this service</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body" id="staff-switch-body"></div>
+                            <div class="modal-footer" style="border-top: 1px solid #fff0f6;">
+                                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                                <button type="button" class="btn" id="staff-switch-confirm" style="background: #ff69b4; color: white;" data-bs-dismiss="modal"></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- JavaScript for Service Selection with Enhanced Interaction -->
                 <script>
                     let selectedTeamMember = 'any';
                     let defaultStaffId = '1';
                     let selectedService = null;
+                    let selectedServiceRequiresStaff = false;
+                    let selectedServiceAllowedStaff = [];
 
                     function selectTeamMember(element, memberId) {
                         document.querySelectorAll('.team-card .card').forEach(card => {
@@ -1070,6 +1089,12 @@
                         if (radio) radio.checked = true;
 
                         selectedService = serviceId;
+                        selectedServiceRequiresStaff = element.getAttribute('data-requires-specific-staff') === '1';
+                        try {
+                            selectedServiceAllowedStaff = JSON.parse(element.getAttribute('data-allowed-staff') || '[]');
+                        } catch (e) {
+                            selectedServiceAllowedStaff = [];
+                        }
                     }
 
                     function searchServices(query) {
@@ -1102,13 +1127,7 @@
                         });
                     }
 
-                    function proceedToBooking() {
-                        if (!selectedService) {
-                            alert('Please select a service before continuing.');
-                            return;
-                        }
-                        
-                        const staffParam = selectedTeamMember === 'any' ? defaultStaffId : selectedTeamMember;
+                    function navigateToBooking(staffParam) {
                         let url = '/appointments/book?service_id=' + selectedService + '&amp;staff_id=' + staffParam;
                         // Preserve promo code from URL if present
                         const urlParams = new URLSearchParams(window.location.search);
@@ -1117,6 +1136,61 @@
                             url += '&amp;promo=' + encodeURIComponent(promo);
                         }
                         window.location.href = url;
+                    }
+
+                    function proceedToBooking() {
+                        if (!selectedService) {
+                            alert('Please select a service before continuing.');
+                            return;
+                        }
+                        const staffParam = selectedTeamMember === 'any' ? defaultStaffId : selectedTeamMember;
+                        if (selectedServiceRequiresStaff) {
+                            const allowed = selectedServiceAllowedStaff || [];
+                            const isAllowed = allowed.some(s => String(s.id) === String(staffParam));
+                            if (!isAllowed) {
+                                showStaffSwitchModal(allowed);
+                                return;
+                            }
+                        }
+                        navigateToBooking(staffParam);
+                    }
+
+                    function escapeHtml(value) {
+                        const div = document.createElement('div');
+                        div.textContent = value == null ? '' : String(value);
+                        return div.innerHTML;
+                    }
+
+                    function showStaffSwitchModal(allowed) {
+                        const body = document.getElementById('staff-switch-body');
+                        const confirmBtn = document.getElementById('staff-switch-confirm');
+                        if (!allowed.length) {
+                            body.innerHTML = '&lt;p class="mb-0"&gt;This service is not currently available for online booking with the selected staff. Please contact us to book.&lt;/p&gt;';
+                            confirmBtn.style.display = 'none';
+                        } else if (allowed.length === 1) {
+                            body.innerHTML = '&lt;p class="mb-0"&gt;This service is only provided by &lt;strong&gt;' + escapeHtml(allowed[0].name) + '&lt;/strong&gt;.&lt;/p&gt;';
+                            confirmBtn.style.display = '';
+                            confirmBtn.textContent = 'Switch to ' + allowed[0].name + ' &amp; continue';
+                            confirmBtn.onclick = function () { navigateToBooking(allowed[0].id); };
+                        } else {
+                            let html = '&lt;p&gt;This service is provided by:&lt;/p&gt;';
+                            allowed.forEach(function (s, i) {
+                                html += '&lt;div class="form-check"&gt;'
+                                    + '&lt;input class="form-check-input" type="radio" name="staff-switch-choice" id="staff-switch-' + s.id + '" value="' + s.id + '"' + (i === 0 ? ' checked="checked"' : '') + '/&gt;'
+                                    + '&lt;label class="form-check-label" for="staff-switch-' + s.id + '"&gt;' + escapeHtml(s.name) + '&lt;/label&gt;'
+                                    + '&lt;/div&gt;';
+                            });
+                            body.innerHTML = html;
+                            confirmBtn.style.display = '';
+                            confirmBtn.textContent = 'Continue with selected';
+                            confirmBtn.onclick = function () {
+                                const chosen = document.querySelector('input[name="staff-switch-choice"]:checked');
+                                if (chosen) { navigateToBooking(chosen.value); }
+                            };
+                        }
+                        const modalEl = document.getElementById('staffSwitchModal');
+                        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+                        modal.show();
                     }
 
                     document.addEventListener('DOMContentLoaded', function() {
