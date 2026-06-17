@@ -87,3 +87,15 @@ class TestRequiresSpecificStaff(TransactionCase):
         appt = self._make_appointment(self.restricted_service, self.allowed_staff)
         with self.assertRaises(ValidationError):
             appt.write({'staff_member_id': self.other_staff.id})
+
+    def test_no_appointment_created_for_disallowed_staff(self):
+        """The booking create() the controller calls must not persist a row
+        when the staff is disallowed (controller catches the ValidationError)."""
+        Appointment = self.env['custom.appointment']
+        before = Appointment.search_count([
+            ('service_id', '=', self.restricted_service.id)])
+        with self.assertRaises(ValidationError):
+            self._make_appointment(self.restricted_service, self.other_staff)
+        after = Appointment.search_count([
+            ('service_id', '=', self.restricted_service.id)])
+        self.assertEqual(before, after)
