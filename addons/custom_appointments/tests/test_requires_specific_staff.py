@@ -1,3 +1,4 @@
+import json
 from datetime import datetime
 
 from odoo.exceptions import ValidationError
@@ -99,3 +100,8 @@ class TestRequiresSpecificStaff(TransactionCase):
         after = Appointment.search_count([
             ('service_id', '=', self.restricted_service.id)])
         self.assertEqual(before, after)
+
+    def test_get_allowed_staff_json(self):
+        data = json.loads(self.restricted_service.get_allowed_staff_json())
+        self.assertEqual(data, [{'id': self.allowed_staff.id, 'name': 'Aisha'}])
+        self.assertEqual(self.open_service.get_allowed_staff_json(), '[]')
