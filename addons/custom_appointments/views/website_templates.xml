@@ -1155,6 +1155,12 @@
                         navigateToBooking(staffParam);
                     }
 
+                    function escapeHtml(value) {
+                        const div = document.createElement('div');
+                        div.textContent = value == null ? '' : String(value);
+                        return div.innerHTML;
+                    }
+
                     function showStaffSwitchModal(allowed) {
                         const body = document.getElementById('staff-switch-body');
                         const confirmBtn = document.getElementById('staff-switch-confirm');
@@ -1162,7 +1168,7 @@
                             body.innerHTML = '&lt;p class="mb-0"&gt;This service is not currently available for online booking with the selected staff. Please contact us to book.&lt;/p&gt;';
                             confirmBtn.style.display = 'none';
                         } else if (allowed.length === 1) {
-                            body.innerHTML = '&lt;p class="mb-0"&gt;This service is only provided by &lt;strong&gt;' + allowed[0].name + '&lt;/strong&gt;.&lt;/p&gt;';
+                            body.innerHTML = '&lt;p class="mb-0"&gt;This service is only provided by &lt;strong&gt;' + escapeHtml(allowed[0].name) + '&lt;/strong&gt;.&lt;/p&gt;';
                             confirmBtn.style.display = '';
                             confirmBtn.textContent = 'Switch to ' + allowed[0].name + ' &amp; continue';
                             confirmBtn.onclick = function () { navigateToBooking(allowed[0].id); };
@@ -1171,7 +1177,7 @@
                             allowed.forEach(function (s, i) {
                                 html += '&lt;div class="form-check"&gt;'
                                     + '&lt;input class="form-check-input" type="radio" name="staff-switch-choice" id="staff-switch-' + s.id + '" value="' + s.id + '"' + (i === 0 ? ' checked="checked"' : '') + '/&gt;'
-                                    + '&lt;label class="form-check-label" for="staff-switch-' + s.id + '"&gt;' + s.name + '&lt;/label&gt;'
+                                    + '&lt;label class="form-check-label" for="staff-switch-' + s.id + '"&gt;' + escapeHtml(s.name) + '&lt;/label&gt;'
                                     + '&lt;/div&gt;';
                             });
                             body.innerHTML = html;
