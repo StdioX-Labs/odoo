@@ -1017,12 +1017,12 @@
                         <div class="modal-content" style="border-radius: 16px;">
                             <div class="modal-header" style="border-bottom: 1px solid #fff0f6;">
                                 <h5 class="modal-title" style="color: #ff69b4;">Staff required for this service</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                <button type="button" class="btn-close" onclick="closeStaffSwitchModal()" aria-label="Close"></button>
                             </div>
                             <div class="modal-body" id="staff-switch-body"></div>
                             <div class="modal-footer" style="border-top: 1px solid #fff0f6;">
-                                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
-                                <button type="button" class="btn" id="staff-switch-confirm" style="background: #ff69b4; color: white;" data-bs-dismiss="modal"></button>
+                                <button type="button" class="btn btn-light" onclick="closeStaffSwitchModal()">Cancel</button>
+                                <button type="button" class="btn" id="staff-switch-confirm" style="background: #ff69b4; color: white;"></button>
                             </div>
                         </div>
                     </div>
@@ -1188,9 +1188,35 @@
                                 if (chosen) { navigateToBooking(chosen.value); }
                             };
                         }
+                        openStaffSwitchModal();
+                    }
+
+                    function openStaffSwitchModal() {
                         const modalEl = document.getElementById('staffSwitchModal');
-                        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
-                        modal.show();
+                        if (!document.getElementById('staff-switch-backdrop')) {
+                            const backdrop = document.createElement('div');
+                            backdrop.id = 'staff-switch-backdrop';
+                            backdrop.className = 'modal-backdrop fade show';
+                            backdrop.onclick = closeStaffSwitchModal;
+                            document.body.appendChild(backdrop);
+                        }
+                        modalEl.style.display = 'block';
+                        modalEl.removeAttribute('aria-hidden');
+                        modalEl.setAttribute('aria-modal', 'true');
+                        document.body.classList.add('modal-open');
+                        void modalEl.offsetHeight;
+                        modalEl.classList.add('show');
+                    }
+
+                    function closeStaffSwitchModal() {
+                        const modalEl = document.getElementById('staffSwitchModal');
+                        modalEl.classList.remove('show');
+                        modalEl.style.display = 'none';
+                        modalEl.setAttribute('aria-hidden', 'true');
+                        modalEl.removeAttribute('aria-modal');
+                        document.body.classList.remove('modal-open');
+                        const backdrop = document.getElementById('staff-switch-backdrop');
+                        if (backdrop) { backdrop.remove(); }
                     }
 
                     document.addEventListener('DOMContentLoaded', function() {
