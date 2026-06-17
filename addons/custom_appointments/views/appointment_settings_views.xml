@@ -80,6 +80,8 @@
                                 </group>
                                 <group string="Request Messages">
                                     <field name="feedback_request_email_subject"/>
+                                    <field name="feedback_request_email_template"
+                                           placeholder="Leave blank to use the default email design. Placeholders: {customer_name}, {company_name}, {service_name}, {staff_name}, {feedback_link}"/>
                                     <field name="feedback_request_sms_template"
                                            placeholder="Hi {customer_name}! How was your {service_name}? Share feedback: {feedback_link}"/>
                                 </group>
@@ -135,19 +137,12 @@
         </field>
     </record>
 
-    <!-- Action to open settings (list first, then form) -->
-    <record id="action_appointment_settings" model="ir.actions.act_window">
+    <!-- Open the singleton settings record directly (never a new record) -->
+    <record id="action_open_communication_settings" model="ir.actions.server">
         <field name="name">Communication Settings</field>
-        <field name="res_model">custom.appointment.settings</field>
-        <field name="view_mode">form,list</field>
-        <field name="view_id" ref="appointment_settings_form_view"/>
-        <field name="target">current</field>
-        <field name="context">{'form_view_initial_mode': 'edit'}</field>
-        <field name="help" type="html">
-            <p class="o_view_nocontent_smiling_face">
-                Configure communication settings
-            </p>
-        </field>
+        <field name="model_id" ref="model_custom_appointment_settings"/>
+        <field name="state">code</field>
+        <field name="code">action = model.action_open_settings()</field>
     </record>
 
     <!-- Configuration Menu -->
@@ -160,6 +155,6 @@
     <menuitem id="menu_communication_settings"
               name="Communication Settings"
               parent="menu_appointments_configuration"
-              action="action_appointment_settings"
+              action="action_open_communication_settings"
               sequence="10"/>
 </odoo>

@@ -146,15 +146,31 @@ class AppointmentSettings(models.Model):
             })
         return settings
 
-    def write(self, vals):
-        """Ensure only one settings record exists"""
-        return super(AppointmentSettings, self).write(vals)
-
     @api.model_create_multi
     def create(self, vals_list):
-        """Ensure only one settings record exists"""
+        """Singleton guard: never create a second settings row, and never let a
+        stray create() overwrite the existing record's values (that wiped
+        user-configured settings back to defaults). Return the existing record
+        untouched if one already exists."""
         existing = self.search([], limit=1)
         if existing:
-            existing.write(vals_list[0] if vals_list else {})
             return existing
         return super(AppointmentSettings, self).create(vals_list)
+
+    @api.model
+    def action_open_settings(self):
+        """Open the singleton settings record directly in edit mode.
+
+        Opening the bare model action would land on a NEW (defaults-filled)
+        record; saving that overwrote the real settings. Always target the
+        existing singleton instead."""
+        settings = self.get_settings()
+        return {
+            'type': 'ir.actions.act_window',
+            'name': 'Communication Settings',
+            'res_model': 'custom.appointment.settings',
+            'view_mode': 'form',
+            'res_id': settings.id,
+            'target': 'current',
+            'context': {'form_view_initial_mode': 'edit'},
+        }
