@@ -59,3 +59,31 @@ class TestRequiresSpecificStaff(TransactionCase):
     def test_is_staff_allowed_restricted(self):
         self.assertTrue(self.restricted_service.is_staff_allowed(self.allowed_staff))
         self.assertFalse(self.restricted_service.is_staff_allowed(self.other_staff))
+
+    def test_allowed_staff_can_be_booked(self):
+        appt = self._make_appointment(self.restricted_service, self.allowed_staff)
+        self.assertTrue(appt.exists())
+
+    def test_disallowed_staff_raises(self):
+        with self.assertRaises(ValidationError):
+            self._make_appointment(self.restricted_service, self.other_staff)
+
+    def test_open_service_accepts_any_staff(self):
+        appt = self._make_appointment(self.open_service, self.other_staff)
+        self.assertTrue(appt.exists())
+
+    def test_requires_specific_but_no_allowed_staff_raises(self):
+        empty_service = self.env['company.service'].create({
+            'name': 'Misconfigured Service',
+            'category_id': self.category.id,
+            'price': 100.0,
+            'duration': 2.0,
+            'requires_specific_staff': True,
+        })
+        with self.assertRaises(ValidationError):
+            self._make_appointment(empty_service, self.allowed_staff)
+
+    def test_reassigning_to_disallowed_staff_raises(self):
+        appt = self._make_appointment(self.restricted_service, self.allowed_staff)
+        with self.assertRaises(ValidationError):
+            appt.write({'staff_member_id': self.other_staff.id})
