@@ -99,6 +99,10 @@ class AppointmentFeedback(models.Model):
 
     def _get_feedback_link(self):
         self.ensure_one()
+        settings = self.env['custom.appointment.settings'].sudo().get_settings()
+        external = (settings.feedback_external_url or '').strip()
+        if external:
+            return external
         base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url', '')
         return f"{base_url}/appointments/feedback/{self.access_token}"
 

@@ -63,6 +63,10 @@
                                     <group string="Channel">
                                         <field name="feedback_channel" widget="radio"/>
                                     </group>
+                                    <group string="Feedback Link">
+                                        <field name="feedback_external_url"
+                                               placeholder="https://docs.google.com/forms/... (leave blank to use the built-in feedback form)"/>
+                                    </group>
                                     <group string="Timing">
                                         <field name="feedback_first_delay_minutes"/>
                                         <field name="feedback_repeat_interval_minutes"/>

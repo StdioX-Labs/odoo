@@ -85,6 +85,21 @@ class TestAppointmentFeedback(TransactionCase):
         self.assertEqual(s.feedback_reward_discount_type, 'percentage')
         self.assertEqual(s.feedback_reward_validity_days, 30)
         self.assertEqual(s.feedback_reward_code_prefix, 'LASH-')
+        self.assertEqual(
+            s.feedback_external_url,
+            'https://docs.google.com/forms/d/e/1FAIpQLSdvOjRpoAz-C4Mnnbajcq-nAKskgVU94L5fwbuibfAaixpN0Q/viewform?usp=publish-editor')
+
+    def test_feedback_link_uses_external_url_when_set(self):
+        fb = self.env['custom.appointment.feedback']._create_for_appointment(self._make_appointment())
+        self.settings.write({'feedback_external_url': 'https://example.com/review'})
+        self.assertEqual(fb._get_feedback_link(), 'https://example.com/review')
+
+    def test_feedback_link_falls_back_to_internal_when_blank(self):
+        fb = self.env['custom.appointment.feedback']._create_for_appointment(self._make_appointment())
+        self.settings.write({'feedback_external_url': ''})
+        link = fb._get_feedback_link()
+        self.assertIn('/appointments/feedback/', link)
+        self.assertIn(fb.access_token, link)
 
     def test_backfill_creates_feedback_when_enabled(self):
         self.settings.write({'enable_feedback_requests': True})

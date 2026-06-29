@@ -87,6 +87,12 @@ class AppointmentSettings(models.Model):
         string='Maximum Requests', default=3,
         help='Maximum number of feedback requests to send per appointment')
 
+    feedback_external_url = fields.Char(
+        string='External Feedback URL',
+        default='https://docs.google.com/forms/d/e/1FAIpQLSdvOjRpoAz-C4Mnnbajcq-nAKskgVU94L5fwbuibfAaixpN0Q/viewform?usp=publish-editor',
+        help='When set, review request messages link customers to this URL instead of the built-in feedback form. '
+             'Leave blank to use the built-in tokenized feedback page.')
+
     # Which fields to ask
     feedback_ask_staff_rating = fields.Boolean(string='Ask Staff Rating', default=True)
     feedback_ask_service_rating = fields.Boolean(string='Ask Service Rating', default=True)

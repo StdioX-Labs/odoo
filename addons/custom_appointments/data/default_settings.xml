@@ -11,6 +11,7 @@
             <field name="followup_until_rebooked">False</field>
             <field name="followup_email_subject">We Miss You! Book Your Next Session</field>
             <field name="followup_sms_template">Hi {customer_name}! We hope you enjoyed your {service_name}. Ready for your next session? Book now: {booking_link}</field>
+            <field name="feedback_external_url">https://docs.google.com/forms/d/e/1FAIpQLSdvOjRpoAz-C4Mnnbajcq-nAKskgVU94L5fwbuibfAaixpN0Q/viewform?usp=publish-editor</field>
         </record>
     </data>
 </odoo>
