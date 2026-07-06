@@ -57,6 +57,7 @@
                                 <group>
                                     <field name="is_bookable"/>
                                     <field name="published"/>
+                                    <field name="show_in_store"/>
                                     <field name="requires_approval"/>
                                     <field name="max_advance_booking"/>
                                 </group>

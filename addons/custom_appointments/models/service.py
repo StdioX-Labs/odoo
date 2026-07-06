@@ -38,7 +38,9 @@ class CompanyService(models.Model):
     
     requires_specific_staff = fields.Boolean(string='Requires Specific Staff', default=False)
     allowed_staff_ids = fields.Many2many('custom.staff.member', string='Allowed Staff Members')
-    
+
+    show_in_store = fields.Boolean(string='Show in Service Store', default=False)
+
     active = fields.Boolean(string='Active', default=True)
     published = fields.Boolean(string='Published', default=True)
     sequence = fields.Integer(string='Sequence', default=10)
@@ -95,8 +97,17 @@ class CompanyService(models.Model):
         ]
         if category_id:
             domain.append(('category_id', '=', category_id))
-        
+
         return self.search(domain, order='sequence, name')
+
+    @api.model
+    def _store_services(self):
+        """Services shown in the service-first store flow."""
+        return self.search([
+            ('show_in_store', '=', True),
+            ('published', '=', True),
+            ('is_bookable', '=', True),
+        ], order='sequence, name')
 
     def is_staff_allowed(self, staff):
         """Return True if `staff` may provide this service."""
