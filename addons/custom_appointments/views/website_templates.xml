@@ -2377,9 +2377,21 @@
                     <t t-if="not staff_members">
                         <p class="text-center text-muted">No specialists are available for this service. Please contact us.</p>
                     </t>
+                    <t t-set="branches" t-value="staff_members.mapped('branch_id')"/>
+                    <div class="text-center mb-4" t-if="len(branches) &gt; 1">
+                        <button type="button" id="branch-chip-all" class="btn btn-sm m-1 store-branch-chip active"
+                                style="border-radius:20px;" onclick="filterByBranch('all')">All Branches</button>
+                        <t t-foreach="branches" t-as="branch">
+                            <button type="button" t-att-id="'branch-chip-' + str(branch.id)"
+                                    class="btn btn-sm m-1 store-branch-chip" style="border-radius:20px;"
+                                    t-att-onclick="'filterByBranch(' + str(branch.id) + ')'">
+                                <t t-esc="branch.name"/>
+                            </button>
+                        </t>
+                    </div>
                     <div class="row">
                         <t t-foreach="staff_members" t-as="staff">
-                            <div class="col-md-3 mb-4">
+                            <div class="col-md-3 mb-4 store-staff-col" t-att-data-branch="staff.branch_id.id">
                                 <a t-attf-href="/appointments/book?service_id=#{service.id}&amp;staff_id=#{staff.id}"
                                    class="text-decoration-none">
                                     <div class="card h-100 text-center shadow-sm" style="border-radius:16px;">
@@ -2398,6 +2410,16 @@
                     </div>
                 </div>
             </div>
+            <script>
+                function filterByBranch(branchId) {
+                    document.querySelectorAll('.store-staff-col').forEach(function (col) {
+                        col.style.display = (branchId === 'all' || col.getAttribute('data-branch') === String(branchId)) ? '' : 'none';
+                    });
+                    document.querySelectorAll('.store-branch-chip').forEach(function (b) { b.classList.remove('active'); });
+                    var active = document.getElementById('branch-chip-' + branchId);
+                    if (active) { active.classList.add('active'); }
+                }
+            </script>
         </t>
     </template>
 </odoo>
