@@ -83,6 +83,29 @@ class AppointmentController(http.Controller):
             'selected_staff': selected_staff,
         })
 
+    @http.route('/appointments/store', type='http', auth='public', website=True)
+    def store_services(self, **kwargs):
+        """Service-first store: list services flagged Show in Service Store."""
+        services = request.env['company.service'].sudo()._store_services()
+        return request.render('custom_appointments.store_service_page', {
+            'services': services,
+        })
+
+    @http.route('/appointments/store/staff', type='http', auth='public', website=True)
+    def store_staff(self, service_id=None, **kwargs):
+        """Store step 2: pick a staff member eligible for the chosen service."""
+        service = request.env['company.service'].sudo().browse(
+            int(service_id)) if service_id else None
+        if not service or not service.exists() or not service.show_in_store:
+            return request.redirect('/appointments/store')
+        staff_members = request.env['custom.staff.member'].sudo().search([
+            ('is_bookable', '=', True), ('active', '=', True),
+        ]).filtered(lambda s: service.is_staff_allowed(s))
+        return request.render('custom_appointments.store_staff_page', {
+            'service': service,
+            'staff_members': staff_members,
+        })
+
     @http.route('/appointments/book', type='http', auth='public', website=True, methods=['GET', 'POST'])
     def book_appointment(self, **kwargs):
         """Appointment booking form"""

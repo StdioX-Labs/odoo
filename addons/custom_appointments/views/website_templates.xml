@@ -2330,4 +2330,74 @@
             </div>
         </t>
     </template>
+
+    <!-- Service-first store: pick a service -->
+    <template id="store_service_page" name="Service Store">
+        <t t-call="website.layout">
+            <div id="wrap_store" class="oe_structure">
+                <div class="container py-5">
+                    <h2 class="text-center mb-4" style="color:#c2185b;">Book a Service</h2>
+                    <t t-if="not services">
+                        <p class="text-center text-muted">No services are available right now.</p>
+                    </t>
+                    <div class="row">
+                        <t t-foreach="services" t-as="service">
+                            <div class="col-md-4 mb-4">
+                                <a t-attf-href="/appointments/store/staff?service_id=#{service.id}"
+                                   class="text-decoration-none">
+                                    <div class="card h-100 shadow-sm" style="border-radius:16px;">
+                                        <t t-if="service.image">
+                                            <img t-att-src="'/web/image/company.service/%s/image/400x300' % service.id"
+                                                 class="card-img-top" style="border-radius:16px 16px 0 0; object-fit:cover; height:180px;" alt="Service"/>
+                                        </t>
+                                        <div class="card-body">
+                                            <h5 class="card-title" style="color:#333;"><t t-esc="service.name"/></h5>
+                                            <p class="card-text text-muted" t-esc="service.description or ''"/>
+                                            <span class="badge" style="background:#fff0f6; color:#c2185b;">
+                                                <t t-esc="service.currency_id.symbol"/><t t-esc="service.price"/>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                        </t>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
+
+    <!-- Service-first store: pick a staff member for the chosen service -->
+    <template id="store_staff_page" name="Service Store - Staff">
+        <t t-call="website.layout">
+            <div id="wrap_store_staff" class="oe_structure">
+                <div class="container py-5">
+                    <h2 class="text-center mb-2" style="color:#c2185b;">Choose a Specialist</h2>
+                    <p class="text-center text-muted mb-4">for <strong t-esc="service.name"/></p>
+                    <t t-if="not staff_members">
+                        <p class="text-center text-muted">No specialists are available for this service. Please contact us.</p>
+                    </t>
+                    <div class="row">
+                        <t t-foreach="staff_members" t-as="staff">
+                            <div class="col-md-3 mb-4">
+                                <a t-attf-href="/appointments/book?service_id=#{service.id}&amp;staff_id=#{staff.id}"
+                                   class="text-decoration-none">
+                                    <div class="card h-100 text-center shadow-sm" style="border-radius:16px;">
+                                        <div class="card-body">
+                                            <t t-if="staff.image">
+                                                <img t-att-src="'/web/image/custom.staff.member/%s/image/120x120' % staff.id"
+                                                     class="rounded-circle mb-2" style="width:90px; height:90px; object-fit:cover;" alt="Staff"/>
+                                            </t>
+                                            <h6 style="color:#333;"><t t-esc="staff.name"/></h6>
+                                            <p class="text-muted small" t-esc="staff.specialization or ''"/>
+                                        </div>
+                                    </div>
+                                </a>
+                            </div>
+                        </t>
+                    </div>
+                </div>
+            </div>
+        </t>
+    </template>
 </odoo>

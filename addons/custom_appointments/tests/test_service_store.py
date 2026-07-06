@@ -37,3 +37,15 @@ class TestServiceStore(TransactionCase):
         self._service(name='Hidden', show_in_store=True, published=False)
         result = self.env['company.service']._store_services()
         self.assertFalse(result.filtered(lambda s: s.name == 'Hidden'))
+
+    def test_store_staff_respects_requires_specific_staff(self):
+        svc = self._service(
+            name='Restricted', show_in_store=True,
+            requires_specific_staff=True,
+            allowed_staff_ids=[(6, 0, [self.allowed_staff.id])],
+        )
+        eligible = self.env['custom.staff.member'].search([
+            ('is_bookable', '=', True), ('active', '=', True),
+        ]).filtered(lambda s: svc.is_staff_allowed(s))
+        self.assertIn(self.allowed_staff, eligible)
+        self.assertNotIn(self.other_staff, eligible)
