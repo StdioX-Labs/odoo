@@ -29,6 +29,7 @@ class TestNotificationPrivacy(TransactionCase):
             'staff_member_id': self.staff.id,
             'branch_id': self.branch.id,
             'start': '2030-01-01 09:00:00',
+            'stop': '2030-01-01 10:00:00',
             'duration': 1.0,
         })
 
