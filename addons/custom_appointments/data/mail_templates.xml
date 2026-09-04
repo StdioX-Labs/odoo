@@ -205,14 +205,6 @@
                             <td style="padding: 8px 0; color: #2d3436;">${object.customer_name}</td>
                         </tr>
                         <tr>
-                            <td style="padding: 8px 0; font-weight: bold; color: #00695c;">Email:</td>
-                            <td style="padding: 8px 0; color: #2d3436;">${object.customer_email}</td>
-                        </tr>
-                        <tr>
-                            <td style="padding: 8px 0; font-weight: bold; color: #00695c;">Phone:</td>
-                            <td style="padding: 8px 0; color: #2d3436;">${object.customer_phone or 'Not provided'}</td>
-                        </tr>
-                        <tr>
                             <td style="padding: 8px 0; font-weight: bold; color: #00695c;">Service:</td>
                             <td style="padding: 8px 0; color: #2d3436;">${object.service_id.name}</td>
                         </tr>
