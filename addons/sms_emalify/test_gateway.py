@@ -88,6 +88,15 @@ def test_vidatech_request_shape():
     assert response[0]['status'] is True
 
 
+def test_vidatech_asks_for_delivery_receipts():
+    calls = fake_gateway([{'status': True, 'data': {'uniqueId': 'abc'}}])
+    params = dict(VIDATECH, **{'web.base.url': 'https://booking.example.test/'})
+    SmsSms._sms_gateway_send(fake_record(params), '254700000001', 'hello')
+
+    assert calls[0]['json'][0]['endpoint'] == \
+        'https://booking.example.test/sms/vidatech/callback', calls[0]['json']
+
+
 def test_vidatech_failure_raises():
     fake_gateway([{'status': False, 'message': 'Insufficient balance'}])
     rec = fake_record(VIDATECH)

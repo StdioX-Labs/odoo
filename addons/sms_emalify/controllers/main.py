@@ -2,10 +2,56 @@
 
 import json
 import logging
-from odoo import http
+from odoo import fields, http
 from odoo.http import request
 
 _logger = logging.getLogger(__name__)
+
+
+class VidatechController(http.Controller):
+
+    # Vidatech does not document its delivery-receipt payload, so log the body
+    # verbatim and match on whichever id field it turns out to use.
+    @http.route('/sms/vidatech/callback', type='http', auth='public',
+                methods=['POST', 'GET'], csrf=False, save_session=False)
+    def vidatech_callback(self, **kwargs):
+        raw = request.httprequest.get_data(as_text=True)
+        _logger.info('Vidatech delivery receipt: params=%s body=%s', kwargs, raw)
+
+        data = dict(kwargs)
+        if raw:
+            try:
+                parsed = json.loads(raw)
+                if isinstance(parsed, list) and parsed:
+                    parsed = parsed[0]
+                if isinstance(parsed, dict):
+                    data.update(parsed)
+            except ValueError:
+                pass
+        if isinstance(data.get('data'), dict):
+            data.update(data['data'])
+
+        message_id = data.get('uniqueId') or data.get('unique_id') or data.get('messageId')
+        raw_status = str(data.get('status') or data.get('deliveryStatus') or '').lower()
+        status = {
+            'delivered': 'delivered', 'delivrd': 'delivered', 'success': 'delivered',
+            'true': 'delivered',
+            'failed': 'failed', 'undeliv': 'failed', 'undelivered': 'failed',
+            'expired': 'failed', 'false': 'failed',
+            'rejected': 'rejected', 'rejectd': 'rejected',
+        }.get(raw_status, 'pending')
+
+        if message_id:
+            request.env['sms.emalify.delivery'].sudo().update_delivery_status(
+                emalify_message_id=message_id,
+                status=status,
+                callback_data=raw or kwargs,
+                delivered_date=fields.Datetime.now() if status == 'delivered' else None,
+            )
+        else:
+            _logger.warning('Vidatech delivery receipt carried no message id: %s', data)
+
+        return request.make_json_response({'status': True})
 
 
 class EmalifyController(http.Controller):

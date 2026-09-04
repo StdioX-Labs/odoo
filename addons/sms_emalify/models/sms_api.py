@@ -189,11 +189,13 @@ class SmsSms(models.Model):
         """
         param = self.env['ir.config_parameter'].sudo()
         if self._sms_gateway_provider() == 'vidatech':
+            base_url = param.get_param('web.base.url', '')
             response = self._vidatech_send_sms(
                 token=param.get_param('sms_emalify.vidatech_token', ''),
                 sender=param.get_param('sms_emalify.vidatech_sender', ''),
                 mobile=mobile,
                 message=message,
+                endpoint=base_url and '%s/sms/vidatech/callback' % base_url.rstrip('/'),
             )
             message_id = ''
             if isinstance(response, list) and response:
@@ -216,7 +218,7 @@ class SmsSms(models.Model):
                 message_id = str(response.get('message_id', ''))
         return message_id, response
 
-    def _vidatech_send_sms(self, token, sender, mobile, message):
+    def _vidatech_send_sms(self, token, sender, mobile, message, endpoint=None):
         """Send SMS via the Vidatech bulk API. https://bulk.vidatech.co.ke/docs/1.0"""
         url = 'https://bulk.vidatech.co.ke/api/v1/send-sms'
         headers = {
@@ -225,6 +227,8 @@ class SmsSms(models.Model):
             'Authorization': 'Bearer %s' % token,
         }
         payload = [{'sender': sender, 'message': message, 'phone': mobile}]
+        if endpoint:
+            payload[0]['endpoint'] = endpoint
 
         try:
             response = requests.post(url, json=payload, headers=headers, timeout=30)
