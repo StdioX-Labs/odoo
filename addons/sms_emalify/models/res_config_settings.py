@@ -11,6 +11,26 @@ class ResConfigSettings(models.TransientModel):
     _inherit = 'res.config.settings'
 
     # Emalify SMS Configuration Fields
+    sms_emalify_provider = fields.Selection(
+        [('roamtech', 'Roamtech'), ('vidatech', 'Vidatech')],
+        string='SMS Gateway',
+        default='roamtech',
+        config_parameter='sms_emalify.provider',
+        help='Which gateway to use for outgoing SMS'
+    )
+
+    sms_emalify_vidatech_token = fields.Char(
+        string='Vidatech Token',
+        config_parameter='sms_emalify.vidatech_token',
+        help='Vidatech bulk API bearer token'
+    )
+
+    sms_emalify_vidatech_sender = fields.Char(
+        string='Vidatech Sender ID',
+        config_parameter='sms_emalify.vidatech_sender',
+        help='Vidatech sender ID (e.g., EMALIFY)'
+    )
+
     sms_emalify_enabled = fields.Boolean(
         string='Enable Emalify SMS',
         config_parameter='sms_emalify.enabled',
@@ -67,7 +87,10 @@ class ResConfigSettings(models.TransientModel):
         self.ensure_one()
         
         # Check if required fields are filled
-        if not all([self.sms_emalify_api_key, self.sms_emalify_partner_id, self.sms_emalify_shortcode]):
+        if self.sms_emalify_provider == 'vidatech':
+            if not all([self.sms_emalify_vidatech_token, self.sms_emalify_vidatech_sender]):
+                raise UserError(_('Please fill in the Vidatech Token and Sender ID before testing the connection.'))
+        elif not all([self.sms_emalify_api_key, self.sms_emalify_partner_id, self.sms_emalify_shortcode]):
             raise UserError(_(
                 'Please fill in all required fields (API Key, Partner ID, and Shortcode) before testing the connection.'
             ))
