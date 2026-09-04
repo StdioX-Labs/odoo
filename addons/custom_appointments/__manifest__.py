@@ -1,6 +1,6 @@
 {
     'name': 'Custom Appointments',
-    'version': '1.2.1',
+    'version': '1.2.2',
     'category': 'Services',
     'summary': 'Complete appointment booking system with staff, branches, and services',
     'description': '''
