@@ -16,20 +16,20 @@ class SmsEmalifyTestWizard(models.TransientModel):
         required=True,
         help='Enter a phone number to send a test SMS (e.g., 254724512285 or +254724512285)'
     )
-    
+
     message = fields.Text(
         string='Test Message',
         default='This is a test SMS from Odoo via Emalify. If you receive this, your configuration is working correctly!',
         required=True,
         help='Message to send for testing'
     )
-    
+
     result = fields.Text(
         string='Result',
         readonly=True,
         help='Result of the test'
     )
-    
+
     state = fields.Selection([
         ('draft', 'Draft'),
         ('sent', 'Sent'),
@@ -50,58 +50,49 @@ class SmsEmalifyTestWizard(models.TransientModel):
     def action_send_test_sms(self):
         """Send a test SMS via Emalify"""
         self.ensure_one()
-        
+
         try:
             # Get configuration
             IrConfigParam = self.env['ir.config_parameter'].sudo()
             emalify_enabled = IrConfigParam.get_param('sms_emalify.enabled', 'False') == 'True'
-            
+
             if not emalify_enabled:
                 raise UserError(_(
                     'Emalify SMS is not enabled. Please enable it in Settings → General Settings → Emalify SMS.'
                 ))
-            
-            api_key = IrConfigParam.get_param('sms_emalify.api_key', '')
-            partner_id = IrConfigParam.get_param('sms_emalify.partner_id', '')
-            shortcode = IrConfigParam.get_param('sms_emalify.shortcode', '')
-            
-            if not all([api_key, partner_id, shortcode]):
-                raise UserError(_(
-                    'Emalify SMS credentials are incomplete. Please configure all required fields in Settings.'
-                ))
-            
-            # Format phone number
+
             sms_sms = self.env['sms.sms']
+            missing = sms_sms._sms_gateway_missing_credentials()
+            if missing:
+                raise UserError(_(
+                    'SMS gateway credentials are incomplete (missing: %s). '
+                    'Please configure them in Settings.'
+                ) % missing)
+
+            # Format phone number
             formatted_number = sms_sms._emalify_format_phone_number(self.phone_number)
-            
+
             if not formatted_number:
                 raise UserError(_(
                     'Invalid phone number format. Please enter a valid phone number (e.g., 254724512285 or +254724512285).'
                 ))
-            
+
             # Send test SMS
             _logger.info(f'Sending test SMS to {formatted_number}')
-            
-            response = sms_sms._emalify_send_sms(
-                api_key=api_key,
-                partner_id=partner_id,
-                shortcode=shortcode,
-                mobile=formatted_number,
-                message=self.message,
-                pass_type=IrConfigParam.get_param('sms_emalify.pass_type', 'plain'),
-            )
-            
+
+            message_id, response = sms_sms._sms_gateway_send(formatted_number, self.message)
+
             # Create delivery tracking record
             self.env['sms.emalify.delivery'].sudo().create({
                 'phone_number': formatted_number,
                 'message_content': self.message,
                 'status': 'sent',
-                'emalify_message_id': response.get('message_id', ''),
+                'emalify_message_id': message_id,
                 'api_response': str(response),
                 'res_model': self._name,
                 'res_id': self.id,
             })
-            
+
             # Update wizard state
             self.write({
                 'state': 'sent',
@@ -111,9 +102,9 @@ class SmsEmalifyTestWizard(models.TransientModel):
                          f'If you configured the callback URL in Emalify dashboard, '
                          f'you can check the delivery status in the Delivery Logs.'
             })
-            
+
             _logger.info(f'Test SMS sent successfully to {formatted_number}')
-            
+
             return {
                 'type': 'ir.actions.act_window',
                 'res_model': self._name,
@@ -121,11 +112,11 @@ class SmsEmalifyTestWizard(models.TransientModel):
                 'view_mode': 'form',
                 'target': 'new',
             }
-            
+
         except Exception as e:
             error_message = str(e)
             _logger.error(f'Test SMS failed: {error_message}', exc_info=True)
-            
+
             self.write({
                 'state': 'error',
                 'result': f'✗ Test SMS failed!\n\nError:\n{error_message}\n\n'
@@ -136,7 +127,7 @@ class SmsEmalifyTestWizard(models.TransientModel):
                          f'4. Your network connection is working\n'
                          f'5. Check the Odoo logs for more details'
             })
-            
+
             return {
                 'type': 'ir.actions.act_window',
                 'res_model': self._name,
@@ -144,7 +135,7 @@ class SmsEmalifyTestWizard(models.TransientModel):
                 'view_mode': 'form',
                 'target': 'new',
             }
-    
+
     def action_reset(self):
         """Reset the wizard to send another test"""
         self.ensure_one()

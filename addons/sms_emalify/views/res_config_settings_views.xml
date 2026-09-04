@@ -25,32 +25,56 @@
                             
                             <div class="col-12 col-lg-6 o_setting_box" invisible="not sms_emalify_enabled">
                                 <div class="o_setting_right_pane">
+                                    <label for="sms_emalify_provider" string="SMS Gateway"/>
+                                    <field name="sms_emalify_provider" widget="radio"/>
+                                    <div class="text-muted">
+                                        Which gateway actually delivers the messages
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-12 col-lg-6 o_setting_box" invisible="not sms_emalify_enabled or sms_emalify_provider != 'roamtech'">
+                                <div class="o_setting_right_pane">
                                     <label for="sms_emalify_api_key" string="API Key"/>
                                     <field name="sms_emalify_api_key" password="True" placeholder="e.g., e7f6653c80b0b5da94a8750254c72640"/>
                                 </div>
                             </div>
                             
-                            <div class="col-12 col-lg-6 o_setting_box" invisible="not sms_emalify_enabled">
+                            <div class="col-12 col-lg-6 o_setting_box" invisible="not sms_emalify_enabled or sms_emalify_provider != 'roamtech'">
                                 <div class="o_setting_right_pane">
                                     <label for="sms_emalify_partner_id" string="Partner ID"/>
                                     <field name="sms_emalify_partner_id" placeholder="e.g., 221"/>
                                 </div>
                             </div>
                             
-                            <div class="col-12 col-lg-6 o_setting_box" invisible="not sms_emalify_enabled">
+                            <div class="col-12 col-lg-6 o_setting_box" invisible="not sms_emalify_enabled or sms_emalify_provider != 'roamtech'">
                                 <div class="o_setting_right_pane">
                                     <label for="sms_emalify_shortcode" string="Shortcode (Sender Name)"/>
                                     <field name="sms_emalify_shortcode" placeholder="e.g., STDIOXTIX"/>
                                 </div>
                             </div>
                             
-                            <div class="col-12 col-lg-6 o_setting_box" invisible="not sms_emalify_enabled">
+                            <div class="col-12 col-lg-6 o_setting_box" invisible="not sms_emalify_enabled or sms_emalify_provider != 'roamtech'">
                                 <div class="o_setting_right_pane">
                                     <label for="sms_emalify_pass_type" string="Password Type"/>
                                     <field name="sms_emalify_pass_type"/>
                                 </div>
                             </div>
                             
+                            <div class="col-12 col-lg-6 o_setting_box" invisible="not sms_emalify_enabled or sms_emalify_provider != 'vidatech'">
+                                <div class="o_setting_right_pane">
+                                    <label for="sms_emalify_vidatech_token" string="Vidatech Token"/>
+                                    <field name="sms_emalify_vidatech_token" password="True" placeholder="eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9..."/>
+                                </div>
+                            </div>
+
+                            <div class="col-12 col-lg-6 o_setting_box" invisible="not sms_emalify_enabled or sms_emalify_provider != 'vidatech'">
+                                <div class="o_setting_right_pane">
+                                    <label for="sms_emalify_vidatech_sender" string="Vidatech Sender ID"/>
+                                    <field name="sms_emalify_vidatech_sender" placeholder="e.g., EMALIFY"/>
+                                </div>
+                            </div>
+
                             <div class="col-12 col-lg-6 o_setting_box" invisible="not sms_emalify_enabled">
                                 <div class="o_setting_right_pane">
                                     <label for="sms_emalify_default_country_code" string="Default Country Code"/>
