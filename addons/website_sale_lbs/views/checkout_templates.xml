@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Trim B2B fields from the consumer checkout.
+
+         These are hidden, not removed: the inputs stay in the DOM so the POST to
+         /shop/address/submit carries the same keys it always did, and any partner
+         that already has a company name or VAT keeps it. Removing the nodes would
+         silently blank those values on a returning B2B customer's next checkout. -->
+    <template id="address_trim_b2b" inherit_id="website_sale.address" name="Checkout: hide B2B fields">
+        <xpath expr="//div[@id='company_name_div']" position="attributes">
+            <attribute name="class">col-lg-6 mb-2 d-none</attribute>
+        </xpath>
+        <xpath expr="//div[@id='div_vat']" position="attributes">
+            <attribute name="class">col-lg-6 mb-2 d-none</attribute>
+        </xpath>
+        <xpath expr="//div[@id='div_street2']" position="attributes">
+            <attribute name="class">col-lg-12 mb-2 d-none</attribute>
+        </xpath>
+    </template>
+
+</odoo>
