@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <!-- Wholesale settings sit directly under the sales price, so the retail and
+         wholesale figures are read together rather than on separate tabs. -->
+    <record id="product_template_form_wholesale" model="ir.ui.view">
+        <field name="name">product.template.form.wholesale</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_form_view"/>
+        <field name="arch" type="xml">
+            <field name="list_price" position="after">
+                <label for="wholesale_price"/>
+                <div class="o_row">
+                    <field name="wholesale_price"/>
+                    <span class="text-muted">from</span>
+                    <field name="wholesale_min_qty" class="oe_inline"/>
+                    <span class="text-muted">units</span>
+                </div>
+            </field>
+        </field>
+    </record>
+
+    <record id="product_template_list_wholesale" model="ir.ui.view">
+        <field name="name">product.template.list.wholesale</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_tree_view"/>
+        <field name="arch" type="xml">
+            <field name="list_price" position="after">
+                <field name="wholesale_price" optional="show"/>
+                <field name="wholesale_min_qty" optional="show"/>
+            </field>
+        </field>
+    </record>
+
+</odoo>

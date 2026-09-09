@@ -2,10 +2,22 @@ from . import models
 from . import controllers
 import logging
 
+from odoo.addons.payment import reset_payment_provider, setup_provider
+
 _logger = logging.getLogger(__name__)
 
 
+def uninstall_hook(env):
+    """Remove the account.payment.method created for this provider."""
+    reset_payment_provider(env, 'pesapal')
+
+
 def post_init_hook(env):
+    # Creates the `account.payment.method` for this provider. Without it,
+    # account_payment's _create_payment() finds no inbound payment method line
+    # on the journal and raises "Please define a payment method line on your
+    # payment.", so a paid order can never produce a paid invoice.
+    setup_provider(env, 'pesapal')
     """Link payment methods to providers after module installation"""
     pesapal_method = env['payment.method'].search([('code', '=', 'pesapal')], limit=1)
     if not pesapal_method:
