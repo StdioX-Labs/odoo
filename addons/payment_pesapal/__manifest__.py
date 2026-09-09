@@ -1,6 +1,6 @@
 {
     'name': 'Payment Provider: PesaPal',
-    'version': '1.0',
+    'version': '1.1',
     'category': 'Accounting/Payment Providers',
     'sequence': 351,
     'summary': 'PesaPal Payment Gateway - Hosted Checkout',
@@ -17,7 +17,10 @@ Features:
 - Transaction verification
 - Support for multiple African countries
     """,
-    'depends': ['payment'],
+    # account_payment supplies _setup_payment_method / _ensure_payment_method_line and the
+    # account.payment reconciliation that marks an invoice paid. Declaring it also
+    # fixes module load order, so those methods exist when our migration runs.
+    'depends': ['payment', 'account_payment'],
     'data': [
         'security/ir.model.access.csv',
         'views/payment_pesapal_templates.xml',
@@ -35,4 +38,5 @@ Features:
     'auto_install': False,
     'license': 'LGPL-3',
     'post_init_hook': 'post_init_hook',
+    'uninstall_hook': 'uninstall_hook',
 }
