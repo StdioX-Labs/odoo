@@ -2,7 +2,7 @@
 
 import publicWidget from "@web/legacy/js/public/public_widget";
 import { _t } from "@web/core/l10n/translation";
-import { jsonrpc } from "@web/core/network/rpc_service";
+import { rpc } from "@web/core/network/rpc";
 
 publicWidget.registry.MpesaPaymentForm = publicWidget.Widget.extend({
     selector: '.mpesa_payment_container',
@@ -26,7 +26,7 @@ publicWidget.registry.MpesaPaymentForm = publicWidget.Widget.extend({
         this._hideMessage();
 
         try {
-            const data = await jsonrpc('/payment/mpesa/initiate', {
+            const data = await rpc('/payment/mpesa/initiate', {
                 tx_id: txId,
                 phone_number: phoneNumber,
             });

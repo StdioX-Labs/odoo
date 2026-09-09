@@ -17,7 +17,7 @@ class PesaPalController(http.Controller):
         merchant_ref = data.get('OrderMerchantReference')
         
         if not tracking_id:
-            return request.redirect('/payment/process')
+            return request.redirect('/payment/status')
         
         tx = request.env['payment.transaction'].sudo().search([
             ('pesapal_order_tracking_id', '=', tracking_id)
@@ -25,7 +25,7 @@ class PesaPalController(http.Controller):
         
         if not tx:
             _logger.warning('PesaPal: Transaction not found for tracking ID: %s', tracking_id)
-            return request.redirect('/payment/process')
+            return request.redirect('/payment/status')
         
         status = self._get_transaction_status(tx.provider_id, tracking_id)
         
@@ -70,7 +70,10 @@ class PesaPalController(http.Controller):
                 })
                 return request.redirect(f'/appointments/payment?appointment_id={appointment.id}&error=Payment failed. Please try again.')
         
-        return request.redirect('/appointments/payment/success' if tx.state == 'done' else '/appointments')
+        # Not an appointment payment (eCommerce order, portal invoice, ...): hand back
+        # to Odoo's own status page, which honours the transaction's landing_route and
+        # shows the right confirmation for whatever the payment was for.
+        return request.redirect('/payment/status')
 
     @http.route('/payment/pesapal/ipn', type='http', auth='public', methods=['GET'], csrf=False)
     def pesapal_ipn(self, **data):
