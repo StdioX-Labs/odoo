@@ -1,0 +1,51 @@
+// Checkout presentation tweaks.
+//
+// Scoped to the checkout wrapper so nothing here leaks into the rest of the site.
+
+.oe_website_sale {
+
+    // --- Address form ------------------------------------------------------
+    // The default form is a dense grid of same-weight inputs. Give the fields
+    // room to breathe and make labels quieter than the values the customer types.
+    #o_wsale_address_fill,
+    form[action="/shop/address/submit"] {
+
+        .col-form-label {
+            font-size: .8125rem;
+            font-weight: 500;
+            opacity: .7;
+            margin-bottom: .125rem;
+        }
+
+        .form-control,
+        .form-select {
+            padding: .625rem .75rem;
+            border-radius: .5rem;
+        }
+
+        // Optional markers add noise once the optional fields are gone.
+        .label-optional {
+            display: none;
+        }
+    }
+
+    // --- Payment method picker ---------------------------------------------
+    // payment.form_logo renders the method image at its natural size. A method
+    // without an icon (or with an oversized one) otherwise blows the card open.
+    // Cap it at the 45x30 that Odoo's own method icons use.
+    #o_payment_form,
+    .o_payment_form {
+
+        .o_payment_option_card {
+            img,
+            span[data-oe-type="image"] img,
+            .o_payment_method_logo {
+                max-width: 45px;
+                max-height: 30px;
+                width: auto;
+                height: auto;
+                object-fit: contain;
+            }
+        }
+    }
+}

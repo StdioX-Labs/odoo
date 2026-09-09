@@ -8,6 +8,13 @@
         <field name="support_tokenization">False</field>
         <field name="support_express_checkout">False</field>
         <field name="support_refund">none</field>
+        <!-- Odoo ships a 45x30 icon for every payment method it knows about; without
+             one, payment.form_logo renders a full-size placeholder that dominates the
+             checkout page. This is a deliberately generic card glyph at the same
+             dimensions - replace it with the official PesaPal logo via
+             Settings > Payment Methods > PesaPal. -->
+        <field name="image_payment_form" type="base64"
+               file="payment_pesapal/static/description/pesapal_icon.png"/>
     </record>
 
 </odoo>
