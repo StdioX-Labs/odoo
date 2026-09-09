@@ -2,6 +2,7 @@ import logging
 import requests
 import base64
 from datetime import datetime
+from urllib.parse import parse_qsl, urlparse, urlunsplit
 
 from odoo import _, api, fields, models
 from odoo.exceptions import ValidationError
@@ -38,9 +39,17 @@ class PaymentTransaction(models.Model):
         if order_data and order_data.get('redirect_url'):
             self.pesapal_order_tracking_id = order_data.get('order_tracking_id')
             self.pesapal_merchant_reference = order_data.get('merchant_reference')
-            
+
+            redirect_url = order_data['redirect_url']
+            parsed = urlparse(redirect_url)
             res.update({
-                'redirect_url': order_data['redirect_url'],
+                # Kept as-is: the appointments checkout reads this key directly and
+                # redirects on it itself, without going through the payment form.
+                'redirect_url': redirect_url,
+                # Used by the redirect form template. A GET form drops the query
+                # string of its action, so the params travel as hidden inputs.
+                'api_url': urlunsplit((parsed.scheme, parsed.netloc, parsed.path, '', '')),
+                'url_params': dict(parse_qsl(parsed.query)),
             })
         else:
             raise ValidationError(_('Failed to create PesaPal payment. Please try again.'))

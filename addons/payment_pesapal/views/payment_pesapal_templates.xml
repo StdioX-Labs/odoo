@@ -1,5 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
+    <!-- Redirect form used by Odoo's standard payment flow (eCommerce checkout,
+         portal invoices, ...). payment.transaction._get_processing_values() renders
+         this view and the browser auto-submits it, sending the customer to PesaPal's
+         hosted checkout page.
+         The action carries no query string on purpose: browsers discard it when
+         submitting a GET form, so PesaPal's params are emitted as hidden inputs. -->
+    <template id="redirect_form" name="PesaPal Redirect Form">
+        <form t-att-action="api_url" method="get">
+            <t t-foreach="url_params" t-as="key">
+                <input type="hidden" t-att-name="key" t-att-value="url_params[key]"/>
+            </t>
+        </form>
+    </template>
+
     <!-- Payment form template -->
     <template id="pesapal_form" name="PesaPal Payment Form">
         <div class="text-center">
