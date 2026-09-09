@@ -1,0 +1,49 @@
+# Local clone of prod (185.217.127.226 :: /root/odoo).
+# Prod runs a single `odoo` container (odoo-custom:18.0) against a REMOTE Postgres
+# at 62.171.137.101, fronted by Coolify's Traefik. Locally we add our own Postgres
+# and drop the proxy - everything else mirrors prod.
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: odoo
+      POSTGRES_PASSWORD: odoo_password
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - clone-db-data:/var/lib/postgresql/data/pgdata
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U odoo -d postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    restart: unless-stopped
+
+  odoo:
+    build:
+      context: .
+      dockerfile: Dockerfile.clone
+    image: odoo-clone:18.0-20250909
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8069:8069"
+      - "8072:8072"
+    environment:
+      - HOST=db
+      - USER=odoo
+      - PASSWORD=odoo_password
+      - PYTHONUNBUFFERED=1
+      - ODOO_RC=/etc/odoo/odoo.conf
+    volumes:
+      - clone-web-data:/var/lib/odoo
+      - ./config-clone:/etc/odoo
+      - ./addons:/mnt/extra-addons
+      - ./logs:/var/log/odoo
+    restart: unless-stopped
+    command: ["odoo", "--config=/etc/odoo/odoo.conf", "--gevent-port=8072"]
+
+volumes:
+  clone-web-data:
+  clone-db-data:
