@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+
+    <record id="ir_mail_server_form_throttle" model="ir.ui.view">
+        <field name="name">ir.mail_server.form.throttle</field>
+        <field name="model">ir.mail_server</field>
+        <field name="inherit_id" ref="base.ir_mail_server_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//page[@name='connection']" position="after">
+                <page name="sending_limits" string="Sending Limits">
+                    <group>
+                        <group>
+                            <field name="throttle_daily_limit"/>
+                            <field name="throttle_transactional_reserve"
+                                   invisible="not throttle_daily_limit"/>
+                            <field name="throttle_bulk_hourly_limit"
+                                   invisible="not throttle_daily_limit"/>
+                        </group>
+                        <group>
+                            <field name="throttle_paused_until" readonly="1"
+                                   invisible="not throttle_paused_until"/>
+                        </group>
+                    </group>
+                    <div class="text-muted" invisible="not throttle_daily_limit">
+                        Bulk mail (list-view mass emails, Email Marketing) waits in the
+                        queue once it has used the daily limit minus the reserve, or the
+                        hourly limit. Transactional mail is only held while the provider
+                        is actively refusing.
+                    </div>
+                </page>
+            </xpath>
+        </field>
+    </record>
+
+</odoo>
