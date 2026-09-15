@@ -48,11 +48,13 @@ def _backfill_last_24h(env, server):
     only_server = env['ir.mail_server'].sudo().search_count([]) == 1
     since = fields.Datetime.now() - timedelta(hours=24)
 
+    # mail_server_id lives on mail_message: mail.mail _inherits it.
     cr.execute("""
-        SELECT date_trunc('hour', write_date), count(*)
-          FROM mail_mail
-         WHERE state = 'sent' AND write_date > %s
-           AND (mail_server_id = %s OR (%s AND mail_server_id IS NULL))
+        SELECT date_trunc('hour', mm.write_date), count(*)
+          FROM mail_mail mm
+          JOIN mail_message msg ON msg.id = mm.mail_message_id
+         WHERE mm.state = 'sent' AND mm.write_date > %s
+           AND (msg.mail_server_id = %s OR (%s AND msg.mail_server_id IS NULL))
          GROUP BY 1
     """, (since, server.id, only_server))
     rows = cr.fetchall()
@@ -64,11 +66,12 @@ def _backfill_last_24h(env, server):
         _logger.info("Sending limits: back-filled %s sends for %s", sum(c for _h, c in rows), server.name)
 
     cr.execute("""
-        SELECT max(write_date)
-          FROM mail_mail
-         WHERE state = 'exception' AND write_date > %s
-           AND (mail_server_id = %s OR (%s AND mail_server_id IS NULL))
-           AND (failure_reason ILIKE '%%5.4.5%%' OR failure_reason ILIKE '%%sending limit exceeded%%')
+        SELECT max(mm.write_date)
+          FROM mail_mail mm
+          JOIN mail_message msg ON msg.id = mm.mail_message_id
+         WHERE mm.state = 'exception' AND mm.write_date > %s
+           AND (msg.mail_server_id = %s OR (%s AND msg.mail_server_id IS NULL))
+           AND (mm.failure_reason ILIKE '%%5.4.5%%' OR mm.failure_reason ILIKE '%%sending limit exceeded%%')
     """, (since, server.id, only_server))
     last_refusal = cr.fetchone()[0]
     if last_refusal and last_refusal + QUOTA_PAUSE > fields.Datetime.now():

@@ -127,6 +127,37 @@ class TestSendingLimits(TransactionCase):
         mail.send()
         self.assertEqual(mail.state, 'outgoing')
 
+    # -- installing on a database that is already sending ---------------------------
+
+    def test_install_hook_seeds_usage_and_pauses_after_recent_refusal(self):
+        """Runs the real install hook against an active Gmail server, which is the
+        production path: the hook's SQL must work on the live schema (mail_server_id
+        is inherited from mail_message), and an install mid-incident must not see an
+        empty log and start sending into a provider that is refusing."""
+        from odoo.addons.mail_send_throttle import GMAIL_DEFAULTS, post_init_hook
+
+        gmail = self.env['ir.mail_server'].create({
+            'name': 'Gmail', 'smtp_host': 'smtp.gmail.com', 'smtp_port': 465})
+        sent = self.env['mail.mail'].create([{
+            'subject': f's{i}', 'email_to': f's{i}@example.com',
+            'mail_server_id': gmail.id, 'auto_delete': False,
+        } for i in range(3)])
+        sent.write({'state': 'sent'})
+        refused = self.env['mail.mail'].create({
+            'subject': 'r', 'email_to': 'r@example.com', 'mail_server_id': gmail.id})
+        refused.write({'state': 'exception', 'failure_reason':
+                       "SMTPDataError: (550, b'5.4.5 Daily user sending limit exceeded.')"})
+        self.env.flush_all()
+
+        post_init_hook(self.env)
+
+        self.assertEqual(gmail.throttle_daily_limit, GMAIL_DEFAULTS['throttle_daily_limit'])
+        self.assertEqual(
+            self.Log._recipients_since(gmail, fields.Datetime.now() - timedelta(hours=24)), 3,
+            "the last 24 hours of traffic must be counted")
+        self.assertGreater(gmail.throttle_paused_until, fields.Datetime.now(),
+                           "a recent quota refusal must pause the server")
+
     def test_real_failures_still_fail(self):
         mail = self._mails(1, bulk=False)
         with patch(SEND_EMAIL, side_effect=smtplib.SMTPRecipientsRefused(
