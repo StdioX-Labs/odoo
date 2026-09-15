@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 {
     'name': 'SMS Provider: Emalify',
-    'version': '1.2',
+    'version': '1.3',
     'category': 'Hidden/Tools',
     'sequence': 10,
     'summary': 'SMS Gateway Integration (Roamtech / Vidatech)',

@@ -39,6 +39,15 @@ class SmsEmalifyDelivery(models.Model):
         index=True,
         help='Unique message ID from Emalify API'
     )
+
+    sms_uuid = fields.Char(
+        string='SMS UUID',
+        index=True,
+        help="uuid of the Odoo SMS this row was sent for. Links a gateway delivery "
+             "receipt back to the SMS tracker, and so to the marketing campaign "
+             "statistics and chatter notification, after the SMS row itself has been "
+             "garbage-collected."
+    )
     
     api_response = fields.Text(
         string='API Response',
@@ -126,11 +135,39 @@ class SmsEmalifyDelivery(models.Model):
             update_vals['delivered_date'] = delivered_date
         
         delivery.write(update_vals)
+        delivery._propagate_to_sms_tracker()
         
         _logger.info(f'Updated delivery status for {delivery.phone_number} to {status}')
         
         return delivery
     
+    # Gateway receipt status -> sms.sms state, as consumed by
+    # sms.tracker._action_update_from_sms_state(). Core's own /sms/status route
+    # does the same for IAP receipts.
+    _RECEIPT_TO_SMS_STATE = {
+        'delivered': 'sent',     # shown as "Delivered"
+        'failed': 'error',
+        'rejected': 'error',
+    }
+
+    def _propagate_to_sms_tracker(self):
+        """Push a delivery receipt onto the Odoo SMS tracker, which updates the
+        marketing trace (campaign statistics) and the chatter notification."""
+        for delivery in self.filtered('sms_uuid'):
+            sms_state = self._RECEIPT_TO_SMS_STATE.get(delivery.status)
+            if not sms_state:
+                continue
+            trackers = self.env['sms.tracker'].sudo().search([('sms_uuid', '=', delivery.sms_uuid)])
+            if not trackers:
+                continue
+            if sms_state == 'error':
+                trackers._action_update_from_sms_state(
+                    'error', failure_type='sms_server',
+                    failure_reason=delivery.error_message or _('Rejected by the SMS gateway'),
+                )
+            else:
+                trackers._action_update_from_sms_state(sms_state)
+
     def action_view_related_record(self):
         """Open the related record"""
         self.ensure_one()
