@@ -6,167 +6,62 @@ import re
 from odoo import api, models, _
 from odoo.exceptions import UserError
 
+from odoo.addons.sms_emalify.tools.sms_api import SmsApiEmalify
+
 _logger = logging.getLogger(__name__)
 
 
 class SmsSms(models.Model):
     _inherit = 'sms.sms'
 
+    @api.model
+    def _emalify_enabled(self):
+        return self.env['ir.config_parameter'].sudo().get_param('sms_emalify.enabled', 'False') == 'True'
+
     @api.model_create_multi
     def create(self, vals_list):
-        """Override create to automatically send SMS via Emalify when enabled"""
+        """Send transactional SMS the moment they are created.
+
+        Appointment confirmations and reminders are created straight into the
+        ``outgoing`` state and are expected to leave immediately rather than wait
+        for the SMS queue cron. Marketing SMS carry a ``mailing_id`` and are left to
+        that cron, which sends them in batches and commits between each one.
+
+        This goes through core ``send()`` so the gateway is reached via
+        ``_split_by_api`` and core records the outcome on the SMS, its chatter
+        notification and any marketing trace.
+        """
         records = super().create(vals_list)
-
-        # Check if Emalify is enabled
-        IrConfigParam = self.env['ir.config_parameter'].sudo()
-        emalify_enabled = IrConfigParam.get_param('sms_emalify.enabled', 'False') == 'True'
-
-        if emalify_enabled:
-            _logger.info(f'Emalify is enabled, processing {len(records)} SMS records')
-            # Only auto-send for non-marketing SMS (SMS without mailing_id)
-            # Marketing SMS will be sent via _send() method by the marketing cron
-            # Check if mailing_id field exists (from mass_mailing_sms module)
+        if self._emalify_enabled():
             has_mailing = 'mailing_id' in records._fields
-            if has_mailing:
-                outgoing_sms = records.filtered(lambda s: s.state == 'outgoing' and not s.mailing_id)
-            else:
-                # If no mailing_id field, all SMS are non-marketing
-                outgoing_sms = records.filtered(lambda s: s.state == 'outgoing')
-
-            if outgoing_sms:
-                _logger.info(f'Auto-sending {len(outgoing_sms)} non-marketing SMS')
-                outgoing_sms._send_emalify()
-            else:
-                _logger.info(f'Skipping auto-send for {len(records)} SMS (marketing or not outgoing)')
-
+            immediate = records.filtered(
+                lambda s: s.state == 'outgoing' and not (has_mailing and s.mailing_id)
+            )
+            if immediate:
+                immediate.send(unlink_failed=False, unlink_sent=True,
+                               auto_commit=False, raise_exception=False)
         return records
 
-    def _send(self, unlink_failed=False, unlink_sent=True, raise_exception=False):
-        """
-        Override the core SMS sending method to use Emalify API instead of IAP.
-        """
-        # Check if Emalify is enabled
-        IrConfigParam = self.env['ir.config_parameter'].sudo()
-        emalify_enabled = IrConfigParam.get_param('sms_emalify.enabled', 'False') == 'True'
+    # -- routing: plug the gateway in where core picks an SMS API ---------------
 
-        if not emalify_enabled:
-            _logger.info('Emalify SMS is disabled in _send(), falling back to default IAP provider')
-            return super()._send(unlink_failed=unlink_failed, unlink_sent=unlink_sent, raise_exception=raise_exception)
+    def _split_by_api(self):
+        """Route queued and batched SMS (``send()``, the SMS queue cron, SMS
+        Marketing campaigns) through the configured gateway instead of Odoo IAP.
+        Mirrors ``sms_twilio``'s override of the same method."""
+        if self._emalify_enabled():
+            yield SmsApiEmalify(self.env), self
+        else:
+            yield from super()._split_by_api()
 
-        _logger.info(f'Emalify _send() called for {len(self)} SMS records')
-        return self._send_emalify(unlink_failed=unlink_failed, unlink_sent=unlink_sent, raise_exception=raise_exception)
+    def _get_batch_size(self):
+        """The gateway is called once per recipient, so keep batches small. The
+        queue cron commits after each batch, which bounds how many messages would
+        be resent if a run died between the gateway call and the commit."""
+        if self._emalify_enabled():
+            return int(self.env['ir.config_parameter'].sudo().get_param('sms_emalify.batch.size', 50))
+        return super()._get_batch_size()
 
-    def _send_emalify(self, unlink_failed=False, unlink_sent=True, raise_exception=False):
-        """
-        Send SMS via Emalify API
-        """
-        _logger.info(f'=== _send_emalify called for {len(self)} SMS records ===')
-
-        missing = self._sms_gateway_missing_credentials()
-        if missing:
-            _logger.error(f'SMS gateway credentials are not configured: {missing}')
-            for sms in self:
-                sms.write({'state': 'error', 'failure_type': 'sms_credit'})
-            if raise_exception:
-                raise UserError(_(
-                    'SMS gateway is not configured (missing: %s). '
-                    'Please go to Settings → General Settings → Emalify SMS and configure your credentials.'
-                ) % missing)
-            return False
-
-        _logger.info(f'SMS gateway credentials configured, processing {len(self)} SMS')
-
-        # Process each SMS record
-        outgoing_sms = self.filtered(lambda s: s.state == 'outgoing')
-        _logger.info(f'Found {len(outgoing_sms)} outgoing SMS to process')
-
-        for sms in outgoing_sms:
-            number = sms.number
-            content = sms.body
-
-            _logger.info(f'Processing SMS {sms.id}: to {number}, body length: {len(content) if content else 0}')
-
-            # Format phone number
-            formatted_number = self._emalify_format_phone_number(number)
-
-            if not formatted_number:
-                _logger.warning(f'Invalid phone number format: {number}')
-                sms.write({'state': 'error', 'failure_type': 'sms_number_format'})
-                continue
-
-            _logger.info(f'Formatted number: {number} -> {formatted_number}')
-
-            # Send SMS via the configured gateway
-            try:
-                _logger.info(f'Calling SMS gateway for {formatted_number}')
-                message_id, response = self._sms_gateway_send(formatted_number, content)
-
-                _logger.info(f'SMS gateway response: {response}')
-
-                # Create delivery tracking record
-                self.env['sms.emalify.delivery'].sudo().create({
-                    'phone_number': formatted_number,
-                    'message_content': content,
-                    'status': 'sent',
-                    'emalify_message_id': message_id,
-                    'api_response': str(response),
-                    'res_model': '',
-                    'res_id': 0,
-                })
-
-                # Mark SMS as sent
-                sms.write({'state': 'sent', 'failure_type': False})
-
-                _logger.info(f'✓ SMS {sms.id} sent successfully to {formatted_number}')
-
-            except Exception as e:
-                _logger.error(f'✗ Failed to send SMS {sms.id} to {formatted_number}: {str(e)}', exc_info=True)
-
-                # Create delivery tracking record for failed message
-                self.env['sms.emalify.delivery'].sudo().create({
-                    'phone_number': formatted_number,
-                    'message_content': content,
-                    'status': 'failed',
-                    'error_message': str(e),
-                    'res_model': '',
-                    'res_id': 0,
-                })
-
-                # Mark SMS as failed
-                sms.write({'state': 'error', 'failure_type': 'sms_server'})
-
-                if raise_exception:
-                    raise
-
-        _logger.info(f'=== Completed processing {len(self)} SMS records ===')
-
-        # Handle unlink based on parameters (only for non-marketing SMS)
-        # Marketing SMS should be kept for tracking
-        # Check if mailing_id field exists (from mass_mailing_sms module)
-        has_mailing = 'mailing_id' in self._fields
-
-        if unlink_failed:
-            if has_mailing:
-                to_unlink = self.filtered(lambda s: s.state == 'error' and not s.mailing_id)
-            else:
-                to_unlink = self.filtered(lambda s: s.state == 'error')
-
-            if to_unlink:
-                _logger.info(f'Unlinking {len(to_unlink)} failed SMS')
-                to_unlink.unlink()
-
-        if unlink_sent:
-            if has_mailing:
-                to_unlink = self.filtered(lambda s: s.state == 'sent' and not s.mailing_id)
-            else:
-                to_unlink = self.filtered(lambda s: s.state == 'sent')
-
-            if to_unlink:
-                _logger.info(f'Unlinking {len(to_unlink)} sent SMS')
-                to_unlink.unlink()
-
-        _logger.info(f'Returning True from _send_emalify')
-        return True
+    # -- gateway helpers --------------------------------------------------------
 
     def _sms_gateway_provider(self):
         return self.env['ir.config_parameter'].sudo().get_param('sms_emalify.provider', 'roamtech')
