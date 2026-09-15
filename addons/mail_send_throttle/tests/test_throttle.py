@@ -7,6 +7,7 @@ In test mode Odoo's SMTP layer connects to nothing and sends nothing, so a mail
 
 import smtplib
 from datetime import timedelta
+from unittest import SkipTest
 from unittest.mock import patch
 
 from odoo import fields
@@ -18,8 +19,8 @@ GMAIL_DAILY_LIMIT = smtplib.SMTPDataError(
     550, b'5.4.5 Daily user sending limit exceeded. For more information on Gmail')
 
 
-@tagged('post_install', '-at_install')
-class TestSendingLimits(TransactionCase):
+class ThrottleCase(TransactionCase):
+    """A server limited to 10 recipients a day, 2 of them reserved."""
 
     @classmethod
     def setUpClass(cls):
@@ -43,6 +44,10 @@ class TestSendingLimits(TransactionCase):
     def _already_sent(self, recipients, hours_ago=1, bulk=False):
         self.Log.create({'mail_server_id': self.server.id, 'recipients': recipients, 'bulk': bulk,
                          'sent_at': fields.Datetime.now() - timedelta(hours=hours_ago)})
+
+
+@tagged('post_install', '-at_install')
+class TestSendingLimits(ThrottleCase):
 
     # -- marking bulk -------------------------------------------------------------
 
@@ -165,3 +170,64 @@ class TestSendingLimits(TransactionCase):
             mail.send()
         self.assertEqual(mail.state, 'exception')
         self.assertFalse(self.server.throttle_paused_until)
+
+
+@tagged('post_install', '-at_install')
+class TestEmailMarketingLimits(ThrottleCase):
+    """An Email Marketing campaign is the case the limit exists for. mail_send_throttle
+    does not depend on Email Marketing, so these only run where it is installed."""
+
+    @classmethod
+    def setUpClass(cls):
+        super().setUpClass()
+        if 'mailing.mailing' not in cls.env:
+            raise SkipTest('Email Marketing (mass_mailing) is not installed')
+        cls.partners = cls.env['res.partner'].create([
+            {'name': f'Client {i}', 'email': f'client{i}@example.com'} for i in range(5)])
+
+    def _campaign(self):
+        mailing = self.env['mailing.mailing'].create({
+            'subject': 'VAT notice',
+            'body_html': '<p>Important client notice</p>',
+            'mailing_type': 'mail',
+            'mailing_model_id': self.env['ir.model']._get_id('res.partner'),
+            'mailing_domain': repr([('id', 'in', self.partners.ids)]),
+            'mail_server_id': self.server.id,
+        })
+        mailing.action_send_mail()
+        return mailing
+
+    def _campaign_mails(self, mailing):
+        return self.env['mail.mail'].search([('mailing_id', '=', mailing.id)])
+
+    def test_campaign_is_bulk_and_stops_at_the_limit(self):
+        self._already_sent(5)  # 10 - 2 reserve - 5 = 3 left for bulk
+        mailing = self._campaign()
+        # Sending starts as soon as the campaign is launched; a later queue run must
+        # not push more past the limit either. Mails sent are auto-deleted, so the
+        # campaign's traces are the record of what happened, not mail.mail rows.
+        self.env['mail.mail'].process_email_queue(ids=self._campaign_mails(mailing).ids)
+
+        traces = self.env['mailing.trace'].search([('mass_mailing_id', '=', mailing.id)])
+        self.assertEqual(len(traces), 5)
+        self.assertEqual(traces.mapped('trace_status').count('sent'), 3)
+        self.assertEqual(traces.mapped('trace_status').count('outgoing'), 2,
+                         "held recipients must show as queued, not as failed")
+        held = self._campaign_mails(mailing)
+        self.assertEqual(len(held), 2)
+        self.assertTrue(all(held.mapped('throttle_bulk')), "campaign mail must count as bulk")
+        self.assertEqual(set(held.mapped('state')), {'outgoing'})
+
+    def test_campaign_refused_by_gmail_waits_instead_of_failing(self):
+        with patch(SEND_EMAIL, side_effect=GMAIL_DAILY_LIMIT):
+            mailing = self._campaign()
+            self.env['mail.mail'].process_email_queue(ids=self._campaign_mails(mailing).ids)
+
+        traces = self.env['mailing.trace'].search([('mass_mailing_id', '=', mailing.id)])
+        self.assertEqual(len(traces), 5)
+        self.assertNotIn('error', traces.mapped('trace_status'),
+                         "a quota refusal is a delay; the campaign must not report failures")
+        mails = self._campaign_mails(mailing)
+        self.assertEqual(len(mails), 5, "nothing was accepted, so nothing was deleted")
+        self.assertEqual(set(mails.mapped('state')), {'outgoing'})
+        self.assertGreater(self.server.throttle_paused_until, fields.Datetime.now())
