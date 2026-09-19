@@ -1,5 +1,6 @@
 from odoo import models, fields, api, _
 from odoo.exceptions import ValidationError
+from odoo.tools import formataddr
 from datetime import datetime, timedelta
 import base64
 from icalendar import Calendar, Event as ICalEvent
@@ -692,6 +693,20 @@ class Appointment(models.Model):
             branch_address=f"{self.branch_id.street}, {self.branch_id.city}"
         )
 
+    @api.model
+    def _appointment_email_from(self, branch=None):
+        """Sender for appointment emails: the branch address, else the company's,
+        always named after the company, e.g. "Lashes by Shazz" <branch@...>.
+
+        The name matters when the outgoing server only covers another domain:
+        Odoo then sends from its notifications address (odoo.conf ``email_from``)
+        and keeps only this name, so a bare address would show customers the
+        mailbox's local part instead. Reply-To stays on this original address.
+        """
+        company = self.env.user.company_id
+        address = (branch and branch.email) or company.email or 'noreply@localhost'
+        return formataddr((company.name, address))
+
     def _send_confirmation_notifications(self):
         """Send confirmation email to customer and SMS if phone is provided"""
         for appointment in self:
@@ -707,7 +722,7 @@ class Appointment(models.Model):
 
                     subject = f"Appointment Confirmed - {appointment.name}"
                     body_html = appointment._generate_confirmation_email_html()
-                    email_from = appointment.branch_id.email or self.env.user.company_id.email or 'noreply@localhost'
+                    email_from = self.env['custom.appointment']._appointment_email_from(appointment.branch_id)
 
                     mail = self.env['mail.mail'].sudo().create({
                         'subject': subject,
@@ -766,7 +781,7 @@ class Appointment(models.Model):
                 try:
                     subject = f"Appointment Cancelled - {appointment.name}"
                     body_html = appointment._generate_cancellation_email_html()
-                    email_from = appointment.branch_id.email or self.env.user.company_id.email or 'noreply@localhost'
+                    email_from = self.env['custom.appointment']._appointment_email_from(appointment.branch_id)
 
                     mail = self.env['mail.mail'].sudo().create({
                         'subject': subject,
@@ -827,7 +842,7 @@ class Appointment(models.Model):
 
                     subject = f"New Appointment Booked - {appointment.name}"
                     body_html = appointment._generate_staff_notification_email_html()
-                    email_from = self.env.user.company_id.email or 'noreply@localhost'
+                    email_from = self.env['custom.appointment']._appointment_email_from()
 
                     mail = self.env['mail.mail'].sudo().create({
                         'subject': subject,
@@ -887,7 +902,7 @@ class Appointment(models.Model):
             if appointment.customer_email:
                 subject = f"Reminder: Your appointment tomorrow - {appointment.name}"
                 body_html = appointment._generate_reminder_email_html()
-                email_from = appointment.branch_id.email or self.env.user.company_id.email or 'noreply@localhost'
+                email_from = self.env['custom.appointment']._appointment_email_from(appointment.branch_id)
 
                 mail = self.env['mail.mail'].sudo().create({
                     'subject': subject,
@@ -1016,7 +1031,7 @@ class Appointment(models.Model):
                 try:
                     subject = settings.followup_email_subject or "We Miss You! Book Your Next Session"
                     body_html = self._generate_followup_email_html(settings)
-                    email_from = self.branch_id.email if self.branch_id else self.env.user.company_id.email or 'noreply@localhost'
+                    email_from = self.env['custom.appointment']._appointment_email_from(self.branch_id)
 
                     mail = self.env['mail.mail'].sudo().create({
                         'subject': subject,

@@ -154,7 +154,7 @@ class AppointmentFeedback(models.Model):
         if settings.feedback_channel in ('email', 'both') and self.customer_email:
             try:
                 body_html = self._feedback_request_body(settings)
-                email_from = (self.branch_id.email or company.email or 'noreply@localhost')
+                email_from = self.env['custom.appointment']._appointment_email_from(self.branch_id)
                 self.env['mail.mail'].sudo().create({
                     'subject': settings.feedback_request_email_subject or 'We value your feedback',
                     'body_html': body_html,
@@ -249,7 +249,7 @@ class AppointmentFeedback(models.Model):
                     valid_to=valid_to,
                     booking_link=booking_link,
                 )
-                email_from = (self.branch_id.email or company.email or 'noreply@localhost')
+                email_from = self.env['custom.appointment']._appointment_email_from(self.branch_id)
                 self.env['mail.mail'].sudo().create({
                     'subject': 'Your feedback reward is here!',
                     'body_html': body_html,
