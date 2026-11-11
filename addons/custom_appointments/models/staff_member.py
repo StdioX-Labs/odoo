@@ -53,10 +53,13 @@ class StaffMember(models.Model):
         help='Share this link so clients can book this staff member directly')
 
     def _compute_booking_url(self):
+        # The website's domain, not web.base.url: that can be an internal
+        # address (http://<ip>:8069) that clients should never be sent.
+        base_url = self.env['website'].get_current_website().get_base_url()
         for staff in self:
             if staff.id:
                 slug = self.env['ir.http']._slug(staff)
-                staff.booking_url = f"{staff.get_base_url()}/book/{slug}"
+                staff.booking_url = f"{base_url}/book/{slug}"
             else:
                 staff.booking_url = False
 

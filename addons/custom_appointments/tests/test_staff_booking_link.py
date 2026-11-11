@@ -13,10 +13,17 @@ class TestStaffBookingLink(TransactionCase):
         self.Staff = self.env['custom.staff.member']
 
     def test_booking_url_uses_name_and_id(self):
-        base = self.staff.get_base_url()
+        base = self.env['website'].get_current_website().get_base_url()
         self.assertEqual(
             self.staff.booking_url,
             f'{base}/book/aisha-wanjiru-{self.staff.id}')
+
+    def test_booking_url_uses_website_domain_not_internal_address(self):
+        self.env['ir.config_parameter'].sudo().set_param(
+            'web.base.url', 'http://185.217.127.226:8069')
+        self.env['website'].get_current_website().domain = 'https://booking.example.com'
+        self.staff.invalidate_recordset(['booking_url'])
+        self.assertTrue(self.staff.booking_url.startswith('https://booking.example.com/book/'))
 
     def test_slug_resolves_to_staff(self):
         slug = self.staff.booking_url.rsplit('/', 1)[1]
