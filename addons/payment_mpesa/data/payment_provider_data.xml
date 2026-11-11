@@ -6,9 +6,14 @@
         <!-- `state`/`is_published` intentionally omitted: this record is re-applied on
              every `-u payment_mpesa`, and setting them would silently switch a live
              provider back to disabled. Both default to disabled/False on install. -->
-        <!-- NOTE: M-Pesa is not yet usable from the standard payment form (eCommerce
-             checkout). It still needs an inline_form_view_id and a working inline
-             template - payment_mpesa_templates.xml currently emits literal "{tx_id}"
-             placeholders instead of QWeb t-att bindings. -->
+        <!-- The phone number field under the M-Pesa option at checkout. Its presence
+             also makes the form use the direct flow (STK Push) instead of a redirect. -->
+        <field name="inline_form_view_id" ref="payment_mpesa.inline_form"/>
+        <!-- Without a linked method, _get_compatible_payment_methods() hides M-Pesa
+             at checkout. Declared here so an upgrade restores the link if lost. -->
+        <field name="payment_method_ids" eval="[(4, ref('payment_mpesa.payment_method_mpesa'))]"/>
+        <field name="pending_msg" type="html">
+            <p>Check your phone and enter your M-Pesa PIN to complete the payment.</p>
+        </field>
     </record>
 </odoo>

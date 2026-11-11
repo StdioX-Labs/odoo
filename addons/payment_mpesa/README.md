@@ -44,9 +44,33 @@ You need to register your application on the Safaricom Developer Portal:
    - **State**: Enable for production or Test Mode for sandbox
    - **Consumer Key**: Your M-Pesa app consumer key
    - **Consumer Secret**: Your M-Pesa app consumer secret
-   - **Business Shortcode**: Your Paybill or Till Number
+   - **Account Type**: Paybill, or Till Number (Buy Goods)
+   - **Business Shortcode**: Your Paybill number, or for a Till the store (head office)
+     number the passkey was issued for
+   - **Till Number**: (Till only) the till that receives the money, if different
    - **Passkey**: Your M-Pesa online passkey
+   - **Callback URL**: must be public **https**, e.g.
+     `https://lashesbyshazz.com/payment/stk/callback`. Daraja does not call http
+     or raw IP addresses, and rejects URLs containing "mpesa" or "safaricom".
 4. **Save** and **Publish** the payment provider
+
+### Switching from PesaPal to M-Pesa
+
+1. `-u payment_mpesa` (links the payment method, the checkout phone field and the
+   accounting payment method; does not switch anything on or off)
+2. Fill in the M-Pesa credentials above, set **State** to Enabled, then Publish
+3. On the PesaPal provider, Unpublish it (or set State to Disabled)
+
+M-Pesa then appears at the eCommerce checkout, on portal invoices and on the
+appointment payment page. A paid order is confirmed and invoiced the same way it
+was with PesaPal.
+
+### How a payment completes
+
+The customer enters their number, gets the STK prompt and enters their PIN while
+the page waits. Safaricom's callback marks the payment done. If the callback never
+arrives, the "M-Pesa: check pending payments" cron asks Daraja for the result
+every 2 minutes (STK Query), so payments do not stay stuck as pending.
 
 ### 3. Test the Integration
 
