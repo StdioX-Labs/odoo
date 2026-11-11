@@ -1,64 +1,72 @@
 /** @odoo-module **/
 
-import publicWidget from "@web/legacy/js/public/public_widget";
-import { _t } from "@web/core/l10n/translation";
-import { rpc } from "@web/core/network/rpc";
+import { _t } from '@web/core/l10n/translation';
+import { rpc, RPCError } from '@web/core/network/rpc';
+import paymentForm from '@payment/js/payment_form';
 
-publicWidget.registry.MpesaPaymentForm = publicWidget.Widget.extend({
-    selector: '.mpesa_payment_container',
-    events: {
-        'click #mpesa_pay_button': '_onClickPay',
-    },
+paymentForm.include({
 
-    _onClickPay: async function (ev) {
-        ev.preventDefault();
-        const $button = $(ev.currentTarget);
-        const phoneNumber = $('#mpesa_phone').val().trim();
-        const txId = parseInt($button.data('tx-id'));
-
-        if (!phoneNumber) {
-            this._showMessage('error', _t('Please enter your phone number'));
+    /**
+     * M-Pesa collects the phone number inline and pays by STK Push: direct flow.
+     *
+     * @override method from @payment/js/payment_form
+     */
+    async _prepareInlineForm(providerId, providerCode, paymentOptionId, paymentMethodCode, flow) {
+        if (providerCode !== 'mpesa') {
+            this._super(...arguments);
+            return;
+        } else if (flow === 'token') {
             return;
         }
+        this._setPaymentFlow('direct');
+    },
 
-        $button.prop('disabled', true);
-        $('#mpesa_loading').show();
-        this._hideMessage();
+    /**
+     * Check the phone number before a transaction is created for it.
+     *
+     * @override method from @payment/js/payment_form
+     */
+    async _initiatePaymentFlow(providerCode, paymentOptionId, paymentMethodCode, flow) {
+        if (providerCode === 'mpesa' && flow !== 'token' && !this._mpesaGetPhone()) {
+            this._displayErrorDialog(
+                _t("M-Pesa"), _t("Enter the M-Pesa phone number you want to pay with.")
+            );
+            this._enableButton();
+            return;
+        }
+        await this._super(...arguments);
+    },
 
+    /**
+     * Send the STK Push, then wait on the status page while the customer enters their PIN.
+     *
+     * @override method from @payment/js/payment_form
+     */
+    async _processDirectFlow(providerCode, paymentOptionId, paymentMethodCode, processingValues) {
+        if (providerCode !== 'mpesa') {
+            this._super(...arguments);
+            return;
+        }
         try {
-            const data = await rpc('/payment/mpesa/initiate', {
-                tx_id: txId,
-                phone_number: phoneNumber,
+            await rpc('/payment/mpesa/stk_push', {
+                reference: processingValues.reference,
+                access_token: processingValues.mpesa_access_token,
+                phone_number: this._mpesaGetPhone(),
             });
-
-            if (data.success) {
-                this._showMessage('success', data.message || _t('Payment initiated successfully'));
-                setTimeout(function () {
-                    window.location.reload();
-                }, 3000);
-            } else {
-                this._showMessage('error', data.error || _t('Payment failed'));
-                $button.prop('disabled', false);
-                $('#mpesa_loading').hide();
-            }
+            window.location = '/payment/status';
         } catch (error) {
-            this._showMessage('error', _t('An error occurred. Please try again.'));
-            $button.prop('disabled', false);
-            $('#mpesa_loading').hide();
+            if (!(error instanceof RPCError)) {
+                throw error;
+            }
+            this._displayErrorDialog(_t("Payment processing failed"), error.data.message);
+            this._enableButton();
         }
     },
 
-    _showMessage: function (type, message) {
-        const $msg = $('#mpesa_message');
-        $msg.removeClass('alert-success alert-danger alert-info');
-        $msg.addClass(type === 'success' ? 'alert-success' : 'alert-danger');
-        $msg.text(message);
-        $msg.show();
+    _mpesaGetPhone() {
+        const radio = this.el.querySelector('input[name="o_payment_radio"]:checked');
+        const input = radio && this._getInlineForm(radio)?.querySelector('input[name="mpesa_phone"]');
+        return input ? input.value.trim() : '';
     },
 
-    _hideMessage: function () {
-        $('#mpesa_message').hide();
-    },
 });
-
-export default publicWidget.registry.MpesaPaymentForm;

@@ -12,7 +12,10 @@
                         <field name="mpesa_consumer_secret" password="True"/>
                     </group>
                     <group>
+                        <field name="mpesa_transaction_type"/>
                         <field name="mpesa_shortcode"/>
+                        <field name="mpesa_till_number"
+                               invisible="mpesa_transaction_type != 'CustomerBuyGoodsOnline'"/>
                         <field name="mpesa_passkey" password="True"/>
                         <label for="mpesa_callback_url"/>
                         <div class="o_row">

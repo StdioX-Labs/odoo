@@ -8,6 +8,9 @@
         <field name="support_tokenization">False</field>
         <field name="support_express_checkout">False</field>
         <field name="support_refund">none</field>
+        <!-- Without an image, payment.form_logo renders a full-size placeholder.
+             Odoo ships the M-Pesa logo for its own (inactive) method; reuse it. -->
+        <field name="image" type="base64" file="payment/static/img/mpesa.png"/>
     </record>
 
 </odoo>
