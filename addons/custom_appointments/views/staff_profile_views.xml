@@ -27,6 +27,15 @@
                         </group>
                     </group>
                     
+                    <group string="My Booking Link">
+                        <group colspan="2">
+                            <field name="booking_url" widget="CopyClipboardChar"
+                                   string="Share with clients"/>
+                            <button name="action_open_booking_page" string="Open Booking Page"
+                                    type="object" class="btn-secondary" icon="fa-external-link"/>
+                        </group>
+                    </group>
+
                     <notebook>
                         <page string="Availability" name="availability">
                             <group>

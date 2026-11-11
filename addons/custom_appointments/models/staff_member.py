@@ -47,6 +47,38 @@ class StaffMember(models.Model):
                 record.display_name = record.name
     
     display_name = fields.Char(compute='_compute_display_name', store=True)
+
+    booking_url = fields.Char(
+        string='Booking Link', compute='_compute_booking_url',
+        help='Share this link so clients can book this staff member directly')
+
+    def _compute_booking_url(self):
+        for staff in self:
+            if staff.id:
+                slug = self.env['ir.http']._slug(staff)
+                staff.booking_url = f"{staff.get_base_url()}/book/{slug}"
+            else:
+                staff.booking_url = False
+
+    @api.model
+    def _from_booking_slug(self, staff_slug):
+        """Staff member a /book/<slug> link points at, if still bookable."""
+        staff_id = self.env['ir.http']._unslug(staff_slug)[1]
+        if not staff_id:
+            return self.browse()
+        return self.search([
+            ('id', '=', staff_id),
+            ('active', '=', True),
+            ('is_bookable', '=', True),
+        ], limit=1)
+
+    def action_open_booking_page(self):
+        self.ensure_one()
+        return {
+            'type': 'ir.actions.act_url',
+            'url': self.booking_url,
+            'target': 'new',
+        }
     
     def action_link_user_by_email(self):
         """Action to find and link the user account matching the staff member's email"""

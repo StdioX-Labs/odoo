@@ -16,6 +16,7 @@
                 <field name="specialization"/>
                 <field name="branch_id"/>
                 <field name="is_bookable"/>
+                <field name="booking_url" widget="CopyClipboardChar" optional="hide"/>
                 <field name="hourly_rate"/>
                 <field name="phone"/>
                 <field name="email"/>
@@ -59,6 +60,14 @@
                         </group>
                     </group>
                     
+                    <group string="Direct Booking Link" invisible="not id">
+                        <group colspan="2">
+                            <field name="booking_url" widget="CopyClipboardChar"/>
+                            <button name="action_open_booking_page" string="Open Booking Page"
+                                    type="object" class="btn-secondary" icon="fa-external-link"/>
+                        </group>
+                    </group>
+
                     <group string="User Account Link">
                         <group>
                             <field name="user_id"/>

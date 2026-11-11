@@ -41,6 +41,14 @@ class AppointmentController(http.Controller):
             'selected_branch': selected_branch,
         })
 
+    @http.route('/book/<string:staff_slug>', type='http', auth='public', website=True)
+    def staff_booking_link(self, staff_slug, **kwargs):
+        """Direct booking link for one staff member, e.g. /book/aisha-12."""
+        staff = request.env['custom.staff.member'].sudo()._from_booking_slug(staff_slug)
+        if not staff:
+            return request.redirect('/appointments')
+        return request.redirect(f'/appointments/services?staff_id={staff.id}')
+
     @http.route('/appointments/services', type='http', auth='public', website=True)
     def service_selection(self, **kwargs):
         """Professional service selection page"""
