@@ -598,10 +598,17 @@ class AppointmentController(http.Controller):
             appointment = request.env['custom.appointment'].sudo().browse(int(appointment_id))
             if not appointment.exists():
                 return {'error': 'Appointment not found'}
-            
+
+            tx = appointment.payment_transaction_id
+            if appointment.payment_status != 'paid' and hasattr(tx, '_mpesa_refresh_if_stale'):
+                # Settle the STK Push from Daraja if its callback is late or lost.
+                tx._mpesa_refresh_if_stale()
+
             return {
                 'payment_status': appointment.payment_status,
                 'state': appointment.state,
+                # Why it failed (cancelled, low balance, wrong PIN...), for the customer.
+                'message': tx.state_message if tx.state in ('cancel', 'error') else False,
             }
         except Exception as e:
             return {'error': str(e)}

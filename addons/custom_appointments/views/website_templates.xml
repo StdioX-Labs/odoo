@@ -2279,8 +2279,10 @@
                                 window.location.href = '/appointments/payment/success?appointment_id=' + appointmentId;
                             } else if (data.payment_status === 'failed') {
                                 clearInterval(checkInterval);
-                                alert('Payment failed. Please try again.');
-                                window.location.href = '/appointments/payment?appointment_id=' + appointmentId;
+                                // Back to the payment page, which shows why (cancelled, low balance, wrong PIN...).
+                                const reason = data.message || 'Payment failed. Please try again.';
+                                window.location.href = '/appointments/payment?appointment_id=' + appointmentId
+                                    + '&amp;error=' + encodeURIComponent(reason);
                             } else {
                                 console.log('Payment still pending. Status:', data.payment_status);
                             }
@@ -2293,11 +2295,11 @@
                     // Start auto-checking every 5 seconds
                     checkInterval = setInterval(checkPaymentStatus, 5000);
                     
-                    // Stop checking after 2 minutes
+                    // Stop checking after 3 minutes (the M-Pesa prompt itself expires after about 1).
                     setTimeout(function() {
                         clearInterval(checkInterval);
-                        alert('Payment check timeout. Please refresh the page to check status.');
-                    }, 120000);
+                        alert('Still waiting for M-Pesa. Tap "Check Payment Status" to check again.');
+                    }, 180000);
                 </script>
             </div>
         </t>

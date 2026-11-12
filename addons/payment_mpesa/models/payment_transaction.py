@@ -8,8 +8,21 @@ from odoo.tools import hmac
 
 _logger = logging.getLogger(__name__)
 
-# ResultCode Daraja sends when the customer dismisses the STK prompt.
-RESULT_CODE_CANCELLED = 1032
+# Daraja STK ResultCodes, with the message shown to the customer. Codes where the
+# customer simply did not complete the prompt cancel the transaction; the rest are
+# errors. Unknown codes fall back to Daraja's own ResultDesc.
+RESULT_CODES_CANCEL = {
+    1032: "You cancelled the M-Pesa request.",
+    1037: "Your phone could not be reached. Make sure it is on and has network, then try again.",
+    1019: "The M-Pesa request expired before it was completed. Please try again.",
+}
+RESULT_CODES_ERROR = {
+    1: "Your M-Pesa balance is not enough for this payment.",
+    2001: "The M-Pesa PIN entered was wrong. Please try again.",
+    1001: "Another M-Pesa payment is in progress on your phone. Wait a moment and try again.",
+    1025: "M-Pesa could not send the prompt. Please try again.",
+    9999: "M-Pesa could not send the prompt. Please try again.",
+}
 
 
 def normalize_phone(phone):
@@ -151,10 +164,14 @@ class PaymentTransaction(models.Model):
                 ))
             else:
                 self._set_done()
-        elif result_code == RESULT_CODE_CANCELLED:
-            self._set_canceled(state_message=result_desc)
+        elif result_code in RESULT_CODES_CANCEL:
+            self._set_canceled(state_message=_(RESULT_CODES_CANCEL[result_code]))
+        elif result_code in RESULT_CODES_ERROR:
+            self._set_error(_(RESULT_CODES_ERROR[result_code]))
         else:
             self._set_error(result_desc)
+        _logger.info("M-Pesa: %s ResultCode %s (%s) -> %s",
+                     self.reference, result_code, result_desc, self.state)
 
         self._mpesa_update_appointment()
 
@@ -185,6 +202,30 @@ class PaymentTransaction(models.Model):
                 appointment.write({'payment_status': 'failed'})
                 _logger.info("M-Pesa: payment failed for appointment %s: %s",
                              appointment.id, tx.state_message)
+        # Write now, while still in sudo. Left to the end of the request, the flush
+        # runs as the caller (the public user for Daraja's callback) and fails on
+        # stored fields that changing the appointment recomputes, e.g. the
+        # customer's total paid (a Monetary field reading res.partner.company_id).
+        self.env.flush_all()
+
+    def _mpesa_refresh_if_stale(self, min_age_seconds=20):
+        """Ask Daraja for the result of a pending STK Push the callback has not settled.
+
+        For pages polling a payment: the customer gets their answer even when the
+        callback is late or lost, instead of waiting for the cron.
+        """
+        for tx in self.filtered(lambda t: t.provider_code == 'mpesa' and t.state == 'pending'
+                                and t.mpesa_checkout_request_id):
+            if tx.last_state_change and \
+                    fields.Datetime.now() - tx.last_state_change < timedelta(seconds=min_age_seconds):
+                continue
+            try:
+                with self.env.cr.savepoint():
+                    notification_data = tx._mpesa_query_stk_status()
+                    if notification_data:
+                        tx._handle_notification_data('mpesa', notification_data)
+            except Exception:
+                _logger.exception("M-Pesa: status check failed for %s", tx.reference)
 
     @api.model
     def _cron_mpesa_check_pending(self):

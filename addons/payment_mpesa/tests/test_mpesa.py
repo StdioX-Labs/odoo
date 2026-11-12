@@ -202,7 +202,30 @@ class TestMpesa(TransactionCase):
         tx = self._pushed_tx()
         self._notify(_callback(1, desc='The balance is insufficient for the transaction.'))
         self.assertEqual(tx.state, 'error')
-        self.assertIn('insufficient', tx.state_message)
+        self.assertIn('balance is not enough', tx.state_message)
+
+    def test_cancelled_prompt_explains_why(self):
+        tx = self._pushed_tx()
+        self._notify(_callback(1032, desc='Request Cancelled by user.'))
+        self.assertEqual(tx.state_message, 'You cancelled the M-Pesa request.')
+
+    def test_unreachable_phone_cancels(self):
+        tx = self._pushed_tx()
+        self._notify(_callback(1037, desc='DS timeout user cannot be reached'))
+        self.assertEqual(tx.state, 'cancel')
+        self.assertIn('could not be reached', tx.state_message)
+
+    def test_wrong_pin_is_an_error(self):
+        tx = self._pushed_tx()
+        self._notify(_callback(2001, desc='The initiator information is invalid.'))
+        self.assertEqual(tx.state, 'error')
+        self.assertIn('PIN', tx.state_message)
+
+    def test_unknown_result_code_keeps_daraja_message(self):
+        tx = self._pushed_tx()
+        self._notify(_callback(4242, desc='Something new from Safaricom'))
+        self.assertEqual(tx.state, 'error')
+        self.assertEqual(tx.state_message, 'Something new from Safaricom')
 
     def test_unknown_checkout_request_raises(self):
         with self.assertRaises(ValidationError):
@@ -224,6 +247,28 @@ class TestMpesa(TransactionCase):
                 patch.object(self.env.cr, 'commit'):
             self.env['payment.transaction']._cron_mpesa_check_pending()
         self.assertEqual(tx.state, 'done')
+
+    def _age(self, tx, seconds):
+        self.env.cr.execute(
+            "UPDATE payment_transaction SET last_state_change = now() at time zone 'utc'"
+            " - %s * interval '1 second' WHERE id = %s", [seconds, tx.id])
+        tx.invalidate_recordset(['last_state_change'])
+
+    def test_refresh_if_stale_settles_from_stk_query(self):
+        tx = self._pushed_tx()
+        self._age(tx, 30)
+        query = {'ResponseCode': '0', 'CheckoutRequestID': _CHECKOUT_ID,
+                 'ResultCode': '1032', 'ResultDesc': 'Request Cancelled by user.'}
+        with patch(_REQUEST, return_value=query):
+            tx._mpesa_refresh_if_stale()
+        self.assertEqual(tx.state, 'cancel')
+
+    def test_refresh_if_stale_leaves_fresh_push_alone(self):
+        tx = self._pushed_tx()
+        with patch(_REQUEST) as request:
+            tx._mpesa_refresh_if_stale()
+        request.assert_not_called()
+        self.assertEqual(tx.state, 'pending')
 
     def test_stk_query_still_processing_leaves_pending(self):
         tx = self._pushed_tx()
@@ -292,6 +337,24 @@ class TestMpesaAppointment(TransactionCase):
         self.assertEqual(self.appointment.payment_status, 'paid')
         self.assertEqual(self.appointment.paid_amount, 1500.0)
         confirm.assert_called_once()
+
+    def test_callback_as_public_user_saves(self):
+        """Daraja's callback runs as the public user: the update must still be written.
+
+        Changing the appointment recomputes the customer's stored total paid, whose
+        currency comes from res.partner.company_id - unreadable by the public user.
+        """
+        partner = self.env['res.partner'].create({
+            'name': 'Wanjiru', 'company_id': self.env.company.id,
+        })
+        self.appointment.partner_id = partner
+        self.env.flush_all()
+        self.env.invalidate_all()  # a fresh request: nothing read yet
+        public_env = self.env(user=self.env.ref('base.public_user'))
+        public_env['payment.transaction'].sudo()._handle_notification_data(
+            'mpesa', parse_stk_callback(_callback(1032, desc='Request Cancelled by user.')))
+        public_env.flush_all()  # what the end of the callback request does
+        self.assertEqual(self.appointment.payment_status, 'failed')
 
     def test_failed_callback_marks_appointment_failed(self):
         self._notify(_callback(1032, desc='Request cancelled by user'))
