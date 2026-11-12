@@ -425,6 +425,7 @@ class AppointmentController(http.Controller):
                 'acquirers': acquirers,
                 'amount': amount_to_charge,
                 'currency': appointment.currency_id,
+                'error': kwargs.get('error'),
             })
         
         elif request.httprequest.method == 'POST':

@@ -2082,6 +2082,12 @@
                                         </t>
                                     </div>
                                     
+                                    <!-- Why the last payment attempt failed (set by _process_payment) -->
+                                    <div t-if="error" class="alert alert-danger" role="alert">
+                                        <i class="fa fa-exclamation-triangle me-1"/>
+                                        <t t-esc="error"/>
+                                    </div>
+
                                     <!-- Payment Methods -->
                                     <form method="post" t-attf-action="/appointments/payment">
                                         <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
